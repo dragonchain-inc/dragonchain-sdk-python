@@ -1,0 +1,4 @@
+requests
+mock
+coverage
+flake8
