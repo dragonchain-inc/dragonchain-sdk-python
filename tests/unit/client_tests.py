@@ -25,7 +25,7 @@ curr_dir = os.path.dirname(os.path.abspath(__file__))
 config_dir = curr_dir + '/.dragonchain/'
 
 
-class TestAuth(TestCase):
+class TestClient(TestCase):
     @patch('pathlib.Path.home', return_value=curr_dir)
     def test_get_auth_key(self, mock_home):
         # Test getting from env
