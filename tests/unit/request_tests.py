@@ -37,6 +37,7 @@ class TestRequests(TestCase):
     def test_get_content_and_type(self):
         test_obj = {'thing': 'data'}
         self.assertEqual(dc_sdk.lib.request.get_content_and_type('a type', '', ''), ('', ''))
+        self.assertEqual(dc_sdk.lib.request.get_content_and_type('a type', b'some bytes', ''), ('a type', 'some bytes'))
         self.assertEqual(dc_sdk.lib.request.get_content_and_type('a type', 'some data', ''), ('a type', 'some data'))
         self.assertEqual(dc_sdk.lib.request.get_content_and_type('', '', json=test_obj), ('application/json', json.dumps(test_obj)))
         self.assertRaises(ValueError, dc_sdk.lib.request.get_content_and_type, '', '', 'not a dict')
@@ -55,13 +56,11 @@ class TestRequests(TestCase):
     def test_make_headers(self):
         dcid = 'an id'
         timestamp = 'a timestamp'
-        rand_id = 'a random id'
         authorization = 'some authorization'
         content_type = 'a content type'
         expected = {
             'dragonchain': dcid,
             'timestamp': timestamp,
-            'id': rand_id,
             'Authorization': authorization
         }
         user_key = 'custom'
@@ -69,19 +68,18 @@ class TestRequests(TestCase):
         user_header = {
             user_key: user_value
         }
-        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, rand_id, '', authorization, None), expected)
+        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, '', authorization, None), expected)
         expected['Content-Type'] = content_type
-        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, rand_id, content_type, authorization, None), expected)
+        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, content_type, authorization, None), expected)
         expected[user_key] = user_value
-        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, rand_id, content_type, authorization, user_header), expected)
+        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, content_type, authorization, user_header), expected)
         user_header['dragonchain'] = 'reserved keyword'
-        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, rand_id, content_type, authorization, user_header), expected)
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, 123, '', '', '', '', {})
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', 123, '', '', '', {})
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', 123, '', '', {})
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', '', 123, '', {})
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', '', '', 123, {})
-        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, 'a', 'a', 'a', 'a', 'a', 'not a dict')
+        self.assertDictEqual(dc_sdk.lib.request.make_headers(dcid, timestamp, content_type, authorization, user_header), expected)
+        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, 123, '', '', '', {})
+        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', 123, '', '', {})
+        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', 123, '', {})
+        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', '', 123, {})
+        self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, 'a', 'a', 'a', 'a', 'not a dict')
 
     def test_make_request(self):
         good_response = requests.Response()

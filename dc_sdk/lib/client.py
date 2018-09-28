@@ -17,6 +17,7 @@ limitations under the License.
 import os
 from configparser import ConfigParser
 from pathlib import Path
+from dc_sdk.lib.request import make_request
 
 
 def get_auth_key(dragonchain_id=None):
@@ -61,7 +62,7 @@ class Client(object):
     A client that interfaces all functionality to a dragonchain with a given id and key
     """
     def __init__(self, dragonchain_id=None, auth_key_id=None,
-                 auth_key=None, endpoint=None):
+                 auth_key=None, endpoint=None, verify=True):
         """
         Construct a new 'Client' object
         :type dragonchain_id: string
@@ -72,6 +73,8 @@ class Client(object):
         :param auth_key: (Optional) Dragonchain authorization key
         :type endpoint: string
         :param endpoint: (Optional) Endpoint of the dragonchain
+        :type verify: boolean
+        :param verify: (Optional) Verify the TLS certificate of the dragonchain
         """
         if not isinstance(dragonchain_id, str):
             raise ValueError('Dragonchain ID must be specified as a string')
@@ -89,3 +92,15 @@ class Client(object):
             if not isinstance(endpoint, str):
                 raise ValueError('endpoint must be specified as a string')
             self.endpoint = endpoint
+        if not isinstance(verify, bool):
+            raise ValueError('verify must be specified as a boolean')
+        self.verify = verify
+
+    def status(self):
+        """
+        Hit the status endpoint of a chain
+        :return: Parsed json response from the chain
+        """
+        return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
+                            auth_key_id=self.auth_key_id, dcid=self.dcid,
+                            http_verb='GET', path='/status', verify=self.verify)

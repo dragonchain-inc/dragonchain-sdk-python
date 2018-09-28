@@ -128,7 +128,29 @@ def compare_hmac(hash_type, hmac_string, secret, message):
     return hmac.compare_digest(b64decode(hmac_string), create_hmac(hash_type, secret, message))
 
 
-def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timestamp, rand_id, content_type="", content="", algorithm="SHA256"):
+def get_hmac_message_string(http_verb, full_path, dcid, timestamp, content_type="", content=""):
+    """
+    Generate the HMAC message string given the appropriate inputs
+    :type http_verb: string
+    :param http_verb: HTTP verb of the request
+    :type full_path: string
+    :param full_path: full path of the request after the FQDN (including any query parameters) (i.e. /chains/transaction)
+    :type dcid: string
+    :param dcid: dragonchain id of the request (must match dragonchain header)
+    :type timestamp: int or string
+    :param timestamp: timestamp of the request (must match timestamp header)
+    :type content_type: string
+    :param content_type: content-type header of the request (if it exists)
+    :type content: bytes or utf-8 encodable string
+    :param content: byte object of the body of the request (if it exists)
+    :return: string to use as the message in HMAC generation
+    """
+    return '{}\n{}\n{}\n{}\n{}\n{}'.format(http_verb.upper(), full_path,
+                                           dcid, timestamp, content_type,
+                                           bytes_to_b64_str(hash_input(SupportedHashes.sha256, content)))
+
+
+def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timestamp, content_type="", content="", algorithm="SHA256"):
     """
     Create an authorization header for making requests to dragonchains
     :type auth_key_id: string
@@ -143,8 +165,6 @@ def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timesta
     :param dcid: dragonchain id of the request (must match dragonchain header)
     :type timestamp: int or string
     :param timestamp: timestamp of the request (must match timestamp header)
-    :type rand_id: string
-    :param rand_id: any random string to act as a unique request id (will be rejected if the random id matches another request in the last 10 min)
     :type content_type: string
     :param content_type: content-type header of the request (if it exists)
     :type content: bytes or utf-8 encodable string
@@ -155,9 +175,7 @@ def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timesta
     """
     # For now, only SHA256 is used for the HMAC/Hashing
     version = '1'
-    message_string = '{}\n{}\n{}\n{}\n{}\n{}\n{}'.format(http_verb.upper(), full_path, dcid,
-                                                         timestamp, rand_id, content_type,
-                                                         bytes_to_b64_str(hash_input(SupportedHashes.sha256, content)))
+    message_string = get_hmac_message_string(http_verb, full_path, dcid, timestamp, content_type, content)
     supported_crypto_hash = None
     if algorithm == 'SHA256':
         supported_crypto_hash = SupportedHashes.sha256

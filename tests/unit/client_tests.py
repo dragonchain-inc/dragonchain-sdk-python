@@ -25,7 +25,15 @@ curr_dir = os.path.dirname(os.path.abspath(__file__))
 config_dir = curr_dir + '/.dragonchain/'
 
 
+def init_client():
+    return dc_sdk.client(dragonchain_id='test', auth_key_id='id', auth_key='key',
+                         endpoint='endpoint', verify=True)
+
+
 class TestClient(TestCase):
+    def test_generate_endpoint(self):
+        self.assertEqual(dc_sdk.lib.client.generate_dragonchain_endpoint('an_id'), 'https://an_id.api.dragonchain.com')
+
     @patch('pathlib.Path.home', return_value=curr_dir)
     def test_get_auth_key(self, mock_home):
         # Test getting from env
@@ -71,6 +79,11 @@ class TestClient(TestCase):
         self.assertRaises(ValueError, dc_sdk.lib.client.Client, 12345)
         self.assertRaises(ValueError, dc_sdk.lib.client.Client, 'dcid', 12345, 'key')
         self.assertRaises(ValueError, dc_sdk.lib.client.Client, 'dcid', 'id', 'key', 12345)
+        self.assertRaises(ValueError, dc_sdk.lib.client.Client, 'dcid', 'id', 'key', 'endpoint', 12345)
 
-    def test_generate_endpoint(self):
-        self.assertEqual(dc_sdk.lib.client.generate_dragonchain_endpoint('an_id'), 'https://an_id.api.dragonchain.com')
+    @patch('dc_sdk.lib.client.make_request')
+    def test_status(self, mock_request):
+        client = init_client()
+        client.status()
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, auth_key=client.auth_key,
+                                        dcid=client.dcid, http_verb='GET', path='/status', verify=client.verify)

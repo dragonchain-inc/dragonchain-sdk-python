@@ -15,8 +15,7 @@ limitations under the License.
 """
 
 from json import dumps
-import uuid
-import time
+import datetime
 import requests
 from dc_sdk.lib.auth import get_authorization
 
@@ -24,7 +23,6 @@ reserved_headers = [
     'authorization',
     'timestamp',
     'dragonchain',
-    'id',
     'content-type',
     'content-length',
     'accept-encoding',
@@ -65,7 +63,7 @@ def get_content_and_type(content_type, data, json):
     Get the appropriate content and content_type values from input
     :type content_type: string
     :param content_type: the content-type header to set (only needed if including data, ignored if json is set)
-    :type data: string or bytes
+    :type data: string or utf-8 encodable bytes
     :param data: data to include with the http request (ignored if json is set)
     :type json: dictionary
     :param json: dictionary object to send as json (automatically sets content-type to application/json)
@@ -84,11 +82,15 @@ def get_content_and_type(content_type, data, json):
         # If data is supplied, content_type must be as well
         if not content_type or not isinstance(content_type, str):
             raise ValueError('if data is set, content_type must be set and a string')
-        content = data
+        if isinstance(data, str):
+            content = data
+        else:
+            content = data.decode('utf-8')
     else:
         if content_type:
             print('Warning: content_type supplied without any content. It will be ignored.')
         content_type = ''
+        content = ''
     return content_type, content
 
 
@@ -102,15 +104,13 @@ def status_code_is_ok(status_code):
     return status_code // 100 == 2
 
 
-def make_headers(dcid, timestamp, rand_id, content_type, authorization, headers):
+def make_headers(dcid, timestamp, content_type, authorization, headers):
     """
     Create a headers dictionary to send with a request to a dragonchain
     :type dcid: string
     :param dcid: id of the dragonchain associated with this request
     :type timestamp: string
     :param timestamp: unix timestamp to put for this request
-    :type rand_id: string
-    :param rand_id: any random string to act as a unique request id
     :type content_type: NoneType or string
     :param content_type: content_type to use for this request
     :type authorization: string
@@ -123,8 +123,6 @@ def make_headers(dcid, timestamp, rand_id, content_type, authorization, headers)
         raise ValueError('dcid must be a string')
     if not isinstance(timestamp, str):
         raise ValueError('timestamp must be a string')
-    if not isinstance(rand_id, str):
-        raise ValueError('rand_id must be a string')
     if not isinstance(authorization, str):
         raise ValueError('authorization must be a string')
     if content_type and not isinstance(content_type, str):
@@ -132,7 +130,6 @@ def make_headers(dcid, timestamp, rand_id, content_type, authorization, headers)
     header_dict = {
         'dragonchain': dcid,
         'timestamp': timestamp,
-        'id': rand_id,
         'Authorization': authorization
     }
     if content_type:
@@ -149,7 +146,7 @@ def make_headers(dcid, timestamp, rand_id, content_type, authorization, headers)
     return header_dict
 
 
-def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30):
+def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30, verify=True):
     """
     Make an http request to a dragonchain with the given information
     :type endpoint: string
@@ -174,6 +171,8 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
     :param headers: any additional headers to include with the request to the dragonchain
     :type timeout: number
     :param timeout: the timeout to wait for the dragonchain to respond (defaults to 30 seconds if not set)
+    :type verify: boolean
+    :param verify: specify if the SSL cert of the chain should be verified
     :return: parsed json response from the dragonchain
     """
     if not isinstance(endpoint, str) or \
@@ -185,14 +184,13 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
         raise ValueError('path must start with a \'/\'')
     requests_method = get_requests_method(http_verb)
     content_type, content = get_content_and_type(content_type, data, json)
-    timestamp = str(int(time.time()))
-    # UUIDs are used as a unique request id
-    rand_id = str(uuid.uuid4())
-    authorization = get_authorization(auth_key_id, auth_key, http_verb, path, dcid, timestamp, rand_id, content_type, content)
-    header_dict = make_headers(dcid, timestamp, rand_id, content_type, authorization, headers)
+    # Add the 'Z' manually to indicate UTC (not added by isoformat)
+    timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
+    authorization = get_authorization(auth_key_id, auth_key, http_verb, path, dcid, timestamp, content_type, content)
+    header_dict = make_headers(dcid, timestamp, content_type, authorization, headers)
     # Make request with appropriate data
     try:
-        r = requests_method(url=endpoint + path, data=content, headers=header_dict, timeout=timeout)
+        r = requests_method(url=endpoint + path, data=content, headers=header_dict, timeout=timeout, verify=verify)
     except Exception as e:
         raise RuntimeError('Error while communicating with the dragonchain: {}'.format(e))
     try:

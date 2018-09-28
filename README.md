@@ -25,7 +25,7 @@ In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID
     ```ini
     [35a7371c-a20a-4830-9a59-5d654fcd0a4a]
     auth_key_id = JSDMWFUJDVTC
-    auth_key = BPB3BW0yCZ586BMkV8z0tuTVJgE40FmGWJVCne9noz6sP2daKju8ZMQ3I3OK8lSnD44uT524ApP6sehlqujX9t
+    auth_key = n3hlldsFxFdP2De0yMu6A4MFRh1HGzFvn6rJ0ICZzkE
     ```
 
 ## Usage
