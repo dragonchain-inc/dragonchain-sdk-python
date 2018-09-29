@@ -1,5 +1,7 @@
 # Dragonchain SDK
 
+![Build Status](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieXNKb0Q3Y2doNkVsMFRZdHVqVWwyTm5lWjBjLzFVYjZCRFlhci9DbUo0aE9lcTlzQ3ErcitsV0NwSUlNVzJuMldFeEJUQUk5dnRlaXVTbUdpNW55NmFNPSIsIml2UGFyYW1ldGVyU3BlYyI6Ii9USGRmNEgxeE5wUU9FMVciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
+
 ## Intro
 
 This is the Python 3 SDK for interacting with a dragonchain.
