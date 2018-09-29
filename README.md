@@ -9,12 +9,31 @@ It provides functionality to be able to interact with a dragonchain through a si
 
 ## Installation
 
-!!!PyPi installation with pip TBD when uploaded!!!
+Windows note: If running on a Windows computer, for the following section, you will probably have to replace `python3` with `python` in the commands below depending on how python3 was installed on your computer.
 
-You can also install this package from source. To do so, simply get the source code (via git clone like `git clone https://github.com/dragonchain-inc/dragonchain-sdk-python.git` or simply downloading/extracting a source tarball from releases), then navigate into the root project directory, then run:
+First ensure that you have python3 installed on your machine.
 
-    ./run.sh build
-    sudo ./run.sh install
+The easiest way to install this repository is with pip. Simply run:
+
+    python3 -m pip install dc_sdk
+
+You can also install this package from source. To do so, get the source code (via git clone like `git clone https://github.com/dragonchain-inc/dragonchain-sdk-python.git` or simply downloading/extracting a source tarball from releases), then navigate into the root project directory. Now ensure that you have pip installed and you can install all the requirements for this project with:
+
+    python3 -m pip install -r requirements.txt
+
+Once these requirements successfully install, run:
+
+```sh
+./run.sh build
+sudo ./run.sh install
+```
+
+On windows, simply replace the above 2 commands with:
+
+```bat
+python3 setup.py build
+python3 setup.py install
+```
 
 ## Configuration
 
