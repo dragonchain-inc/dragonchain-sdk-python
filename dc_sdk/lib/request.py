@@ -104,6 +104,55 @@ def status_code_is_ok(status_code):
     return status_code // 100 == 2
 
 
+def generate_query_string(query_dict):
+    """
+    Generate an http query string from a dictionary
+    :type query_dict: dictionary (must be flat)
+    :param query_dict: dict of parameters to use in the query string
+    :return: query string to use in an HTTP request path
+    """
+    if not isinstance(query_dict, dict):
+        raise ValueError('query_dict must be a dict')
+    if query_dict:
+        query_string = '?'
+        for key, value in query_dict.items():
+            query_string = '{}{}={}&'.format(query_string, key, value)
+        return query_string.rstrip('&')
+    else:
+        # If input is empty, return an empty string as the query string
+        return ''
+
+
+def get_lucene_query_params(query=None, sort=None, offset=0, limit=10):
+    """
+    Generate a lucene query param string with given inputs
+    :type query: string
+    :param query: lucene query parameter (i.e.: is_serial:true)
+    :type sort: string
+    :param sort: sort syntax of 'field:direction' (i.e.: name:asc)
+    :type offset: integer
+    :param offset: pagination offset of query (default 0)
+    :type limit: integer
+    :param limit: pagination limit (default 10)
+    :return: query string to include in request path
+    """
+    if query and not isinstance(query, str):
+        raise ValueError('if query is defined, it must be a string')
+    if sort and not isinstance(sort, str):
+        raise ValueError('if sort is defined, it must be a string')
+    if not isinstance(offset, int) or not isinstance(limit, int):
+        raise ValueError('offset and limit must both be integers')
+    params = {
+        'offset': offset,
+        'limit': limit
+    }
+    if query:
+        params['q'] = query
+    if sort:
+        params['sort'] = sort
+    return generate_query_string(params)
+
+
 def make_headers(dcid, timestamp, content_type, authorization, headers):
     """
     Create a headers dictionary to send with a request to a dragonchain

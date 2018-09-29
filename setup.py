@@ -15,6 +15,7 @@ setup(
     name='dc_sdk',
     version=get_version(),
     author='Dragonchain',
+    author_email='support@dragonchain.com',
     description='Dragonchain SDK for Python',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',

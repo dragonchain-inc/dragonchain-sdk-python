@@ -58,13 +58,13 @@ class TestAuth(TestCase):
             'auth_key_id': 'id',
             'auth_key': 'key',
             'http_verb': 'get',
-            'full_path': '/chains/transaction',
+            'full_path': '/chain/transaction',
             'dcid': 'a dragonchain id',
             'timestamp': 12345,
             'content_type': '',
             'content': '',
             'algorithm': 'SHA256'
         }
-        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-SHA256 id:FiApFxixH7ACX3Ad5eeIBUKFx465cl9L5rYts3YYPEo=')
+        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-SHA256 id:XBzopP+FZkSKZezdNzF0WW1I8E98Fp+q/8AicSk9FqY=')
         kwargs['algorithm'] = 'NOTAHASH'
         self.assertRaises(NotImplementedError, dc_sdk.lib.auth.get_authorization, **kwargs)

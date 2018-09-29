@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - ./run.sh install-req
+  build:
+    commands:
+      - ./run.sh build
+      - ./run.sh build-dist
+      - ./run.sh linter
+      - ./run.sh tests
+      - ./run.sh coverage
+      - ./run.sh bandit

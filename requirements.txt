@@ -1,4 +1,7 @@
 requests
 mock
 coverage
+setuptools
+wheel
 flake8
+bandit

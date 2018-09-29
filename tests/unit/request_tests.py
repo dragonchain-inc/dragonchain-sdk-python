@@ -53,6 +53,23 @@ class TestRequests(TestCase):
         self.assertEqual(dc_sdk.lib.request.status_code_is_ok(399), False)
         self.assertEqual(dc_sdk.lib.request.status_code_is_ok(400), False)
 
+    def test_make_query_string(self):
+        dict_params = {
+            'key': 'value'
+        }
+        self.assertEqual(dc_sdk.lib.request.generate_query_string(dict_params), '?key=value')
+        dict_params['keys'] = 'values'
+        self.assertEqual(dc_sdk.lib.request.generate_query_string(dict_params), '?key=value&keys=values')
+        self.assertEqual(dc_sdk.lib.request.generate_query_string({}), '')
+        self.assertRaises(ValueError, dc_sdk.lib.request.generate_query_string, 'not a dict')
+
+    def test_lucene_query_string(self):
+        self.assertEqual(dc_sdk.lib.request.get_lucene_query_params('q', 's', 1, 2), '?offset=1&limit=2&q=q&sort=s')
+        self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 1)
+        self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 1)
+        self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 'a', 'a')
+        self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 'a', 1, 'a')
+
     def test_make_headers(self):
         dcid = 'an id'
         timestamp = 'a timestamp'
