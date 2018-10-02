@@ -49,10 +49,14 @@ def get_auth_key(dragonchain_id=None):
     auth_key = os.environ.get('DRAGONCHAIN_AUTH_KEY')
     auth_key_id = os.environ.get('DRAGONCHAIN_AUTH_KEY_ID')
     if auth_key is None or auth_key_id is None:
-        # If keys aren't in environment variables, check config file
+        # If both keys aren't in environment variables, check config file
         if dragonchain_id is None:
             raise RuntimeError('Could not locate credentials for this client')
-        cred_file_path = '{}/.dragonchain/credentials'.format(Path.home())
+        cred_file_path = None
+        if os.name == 'nt':
+            cred_file_path = os.path.expandvars(r'%LOCALAPPDATA%\dragonchain\credentials')
+        else:
+            cred_file_path = '{}/.dragonchain/credentials'.format(Path.home())
         config = ConfigParser()
         config.read(cred_file_path)
         try:

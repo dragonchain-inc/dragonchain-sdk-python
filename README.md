@@ -41,7 +41,7 @@ In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID
 
 1. The environment variables `DRAGONCHAIN_AUTH_KEY` and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
 2. The `dc_sdk.client` can be initialized with `auth_key=<KEY>` and `auth_key_id=<KEY_ID>`
-3. Write an ini-style credentials file at `~/.dragonchain/credentials` where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id` like so:
+3. Write an ini-style credentials file at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id` like so:
 
     ```ini
     [35a7371c-a20a-4830-9a59-5d654fcd0a4a]
