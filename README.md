@@ -37,10 +37,10 @@ python3 setup.py install
 
 ## Configuration
 
-In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given dragonchain. This can be loaded into the sdk in various ways.
+In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given dragonchain. This can be loaded into the sdk in various ways, and are checked in the following order of precedence:
 
-1. The environment variables `DRAGONCHAIN_AUTH_KEY` and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
-2. The `dc_sdk.client` can be initialized with `auth_key=<KEY>` and `auth_key_id=<KEY_ID>`
+1. The `dc_sdk.client` can be initialized with `auth_key=<KEY>` and `auth_key_id=<KEY_ID>`
+2. The environment variables `DRAGONCHAIN_AUTH_KEY` and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
 3. Write an ini-style credentials file at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id` like so:
 
     ```ini
