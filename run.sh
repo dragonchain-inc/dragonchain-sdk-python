@@ -44,7 +44,7 @@ elif [ "$1" = "build-dist" ]; then
 elif [ "$1" = "dist-release" ]; then
     python3 -m twine upload dist/*
 elif [ "$1" = "clean" ]; then
-    rm -rf $(find . -name *.pyc) $(find . -name __pycache__) .coverage build/ dist/ dc_sdk.egg-info/
+    rm -rf $(find . -name *.pyc) $(find . -name __pycache__) tests/unit/dragonchain .coverage build/ dist/ dc_sdk.egg-info/
 else
     echo "$USAGE"
 fi

@@ -21,8 +21,8 @@ import shutil
 from configparser import ConfigParser
 import dc_sdk
 
-curr_dir = os.path.dirname(os.path.abspath(__file__))
-config_dir = curr_dir + '/.dragonchain/'
+config_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dragonchain')
+config_file = os.path.join(config_dir, 'credentials')
 
 
 def init_client():
@@ -51,8 +51,22 @@ class TestClient(TestCase):
         self.assertTrue(dc_sdk.lib.client.is_valid_sc_type('cron'))
         self.assertFalse(dc_sdk.lib.client.is_valid_sc_type('not a type'))
 
-    @patch('pathlib.Path.home', return_value=curr_dir)
-    def test_get_auth_key(self, mock_home):
+    @patch('os.path.expandvars', return_value='thing')
+    @patch('pathlib.Path.home', return_value='thing')
+    def test_get_cred_path(self, mock_path, mock_expandvars):
+        # Spoof os name by setting the os module name string in the dc_sdk.lib.client imported os module
+        dc_sdk.lib.client.os.name = 'posix'
+        dc_sdk.lib.client.get_credential_file_path()
+        mock_path.assert_called_once()
+        dc_sdk.lib.client.os.name = 'nt'
+        dc_sdk.lib.client.get_credential_file_path()
+        mock_expandvars.assert_called_with('%LOCALAPPDATA%')
+        # Revert spoofed os name to correct value
+        dc_sdk.lib.client.os.name = os.name
+
+    # Need write permissions in the tests/unit directory for this to pass as it creates a mock credentials file
+    @patch('dc_sdk.lib.client.get_credential_file_path', return_value=config_file)
+    def test_get_auth_key(self, mock_expandvars):
         # Test getting from env
         os.environ['DRAGONCHAIN_AUTH_KEY'] = 'env_key'
         os.environ['DRAGONCHAIN_AUTH_KEY_ID'] = 'env_id'
@@ -61,13 +75,12 @@ class TestClient(TestCase):
         os.environ.pop('DRAGONCHAIN_AUTH_KEY_ID', 0)
         self.assertRaises(RuntimeError, dc_sdk.lib.client.get_auth_key)
         # Create config file for method to find
-        if not os.path.exists(config_dir):
-            os.makedirs(config_dir)
+        os.makedirs(config_dir, exist_ok=True)
         config = ConfigParser()
         config.add_section('dcid')
         config.set('dcid', 'auth_key', 'config_key')
         config.set('dcid', 'auth_key_id', 'config_id')
-        with open(config_dir + 'credentials', 'w') as configfile:
+        with open(config_file, 'w') as configfile:
             config.write(configfile)
         # Test getting from credentials ini file
         self.assertEqual(dc_sdk.lib.client.get_auth_key('dcid'), ('config_id', 'config_key'))

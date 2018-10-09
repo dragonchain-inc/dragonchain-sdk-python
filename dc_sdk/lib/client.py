@@ -37,6 +37,17 @@ valid_sc_types = [
 ]
 
 
+def get_credential_file_path():
+    """
+    Get the path for the credential file depending on the OS
+    :return: string of the credential file path
+    """
+    if os.name == 'nt':
+        return os.path.join(os.path.expandvars('%LOCALAPPDATA%'), 'dragonchain', 'credentials')
+    else:
+        return os.path.join(Path.home(), '.dragonchain', 'credentials')
+
+
 def get_auth_key(dragonchain_id=None):
     """
     Get an auth_key/auth_key_id pair
@@ -51,13 +62,8 @@ def get_auth_key(dragonchain_id=None):
         # If both keys aren't in environment variables, check config file
         if dragonchain_id is None:
             raise RuntimeError('Could not locate credentials for this client')
-        cred_file_path = None
-        if os.name == 'nt':
-            cred_file_path = os.path.expandvars(r'%LOCALAPPDATA%\dragonchain\credentials')
-        else:
-            cred_file_path = '{}/.dragonchain/credentials'.format(Path.home())
         config = ConfigParser()
-        config.read(cred_file_path)
+        config.read(get_credential_file_path())
         try:
             auth_key = config.get(dragonchain_id, 'auth_key')
             auth_key_id = config.get(dragonchain_id, 'auth_key_id')
