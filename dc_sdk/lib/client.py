@@ -20,7 +20,6 @@ from pathlib import Path
 from dc_sdk.lib.request import make_request, get_lucene_query_params
 
 valid_runtimes = [
-    'nodejs4.3',
     'nodejs6.10',
     'nodejs8.10',
     'java8',
@@ -28,7 +27,7 @@ valid_runtimes = [
     'python3.6',
     'dotnetcore1.0',
     'dotnetcore2.0',
-    'nodejs4.3-edge',
+    'dotnetcore2.1',
     'go1.x'
 ]
 

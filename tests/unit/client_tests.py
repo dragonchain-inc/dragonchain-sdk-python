@@ -35,7 +35,6 @@ class TestClient(TestCase):
         self.assertEqual(dc_sdk.lib.client.generate_dragonchain_endpoint('an_id'), 'https://an_id.api.dragonchain.com')
 
     def test_valid_runtime(self):
-        self.assertTrue(dc_sdk.lib.client.is_valid_runtime('nodejs4.3'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('nodejs6.10'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('nodejs8.10'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('java8'))
@@ -43,7 +42,7 @@ class TestClient(TestCase):
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('python3.6'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('dotnetcore1.0'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('dotnetcore2.0'))
-        self.assertTrue(dc_sdk.lib.client.is_valid_runtime('nodejs4.3-edge'))
+        self.assertTrue(dc_sdk.lib.client.is_valid_runtime('dotnetcore2.1'))
         self.assertTrue(dc_sdk.lib.client.is_valid_runtime('go1.x'))
         self.assertFalse(dc_sdk.lib.client.is_valid_runtime('fake_language'))
 
