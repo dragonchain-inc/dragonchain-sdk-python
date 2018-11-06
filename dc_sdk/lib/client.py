@@ -36,6 +36,18 @@ valid_sc_types = [
     'cron'
 ]
 
+valid_contract_libraries = [
+    'currency',
+    'ethereum_interchain_watcher',
+    'neo_interchain_watcher',
+    'bitcoin_interchain_watcher',
+    'private_billing_watcher',
+    'private_negative_balance_currency',
+    'ethereum_publisher',
+    'neo_Publisher',
+    'bitcoin_publisher'
+]
+
 
 def get_credential_file_path():
     """
@@ -171,6 +183,19 @@ class Client(object):
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
                             http_verb='POST', path=path, verify=self.verify, json=body)
 
+    def perform_put(self, path, body):
+        """
+        Make a json body PUT request for this chain
+        :type path: string
+        :param path: path of the request (including any path query parameters)
+        :type body: JSON serializable dictionary
+        :param body: body of the request as a python dictionary
+        :return: response of the put request
+        """
+        return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
+                            auth_key_id=self.auth_key_id, dcid=self.dcid,
+                            http_verb='PUT', path=path, verify=self.verify, json=body)
+
     def get_status(self):
         """
         Get the status of a dragonchain
@@ -204,6 +229,33 @@ class Client(object):
         if not isinstance(name, str):
             raise ValueError('Smart contract name must be a string')
         return self.perform_get('/chain/contract/{}'.format(name))
+
+    def post_library_contract(self, name, library_name, env_vars=None):
+        """
+        Post a library contract to a chain
+        :type name: string
+        :param name: name of the contract to create
+        :type library_name: string
+        :param library_name: the type of contract to be created from the library
+        :type env_vars: dictionary
+        :param env_vars: environment variables to set for the smart contract
+        :return: Parsed json response from the chain
+        """
+        if not isinstance(name, str):
+            raise ValueError('name must be a string')
+        if not isinstance(library_name, str) or library_name not in valid_contract_libraries:
+            raise ValueError('library_name must be a string and a valid contract library from this list: {}'.format(valid_contract_libraries))
+        if env_vars and not isinstance(env_vars, dict):
+            raise ValueError('env_vars must be a dictionary if set')
+        body = {
+            'version': '2',
+            'origin': 'library',
+            'name': name,
+            'libraryContractName': library_name
+        }
+        if env_vars:
+            body['custom_environment_variables'] = env_vars
+        return self.perform_post('/chain/contract', body)
 
     def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None):
         """
@@ -246,6 +298,52 @@ class Client(object):
         if env_vars:
             body['custom_environment_variables'] = env_vars
         return self.perform_post('/chain/contract', body)
+
+    def update_contract(self, name, status, sc_type, code, runtime, serial, env_vars=None):
+        """
+        Update an existing smart contract
+        :type name: string
+        :param name: the name of the contract you are updating
+        :type status: string
+        :param status: status of the contract
+        :type sc_type: string
+        :param sc_type: how the smart contract is invoked ('transaction' or 'cron')
+        :type code: string
+        :param code: base64 encoded zip of the code
+        :type runtime: string
+        :param runtime: string of the runtime for this smart contract
+        :type serial: boolean
+        :param serial: whether or not the smart contract must be executed in serial
+        :type env_vars: dictionary
+        :param env_vars: environment variables to set for the smart contract
+        :return: Parsed json response from the chain
+        """
+        if not isinstance(name, str):
+            raise ValueError('name must be a string')
+        if not isinstance(status, str):
+            raise ValueError('status must be a string')
+        if not isinstance(sc_type, str) or not is_valid_sc_type(sc_type):
+            raise ValueError('sc_type must be either "transaction" or "cron"')
+        if not isinstance(code, str):
+            raise ValueError('code must be a string')
+        if not isinstance(runtime, str) or not is_valid_runtime(runtime):
+            raise ValueError('runtime must be a string and valid runtime from this list: {}'.format(valid_runtimes))
+        if not isinstance(serial, bool):
+            raise ValueError('serial must be a boolean')
+        if env_vars and not isinstance(env_vars, dict):
+            raise ValueError('env_vars must be a dictionary if set')
+        body = {
+            'version': '1',
+            'name': name,
+            'status': status,
+            'sc_type': sc_type,
+            'code': code,
+            'runtime': runtime,
+            'is_serial': serial
+        }
+        if env_vars:
+            body['custom_environment_variables'] = env_vars
+        return self.perform_put('/chain/contract', body)
 
     def query_transactions(self, query=None, sort=None, offset=0, limit=10):
         """
@@ -326,3 +424,20 @@ class Client(object):
         if not isinstance(block_id, str):
             raise ValueError('block_id must be a string')
         return self.perform_get('/chain/block/{}'.format(block_id))
+
+    def get_verification(self, block_id, level=0):
+        """
+        Get all or level specific verifications for a block by id
+        :type block_id: string
+        :param block_id: block id to get
+        :type level: integer
+        :param level: specific level of blocks to return between 2 and 5
+        :return: Parsed json response from the chain
+        """
+        if not isinstance(block_id, str):
+            raise ValueError('block_id must be a string')
+        if not isinstance(level, int):
+            raise ValueError('level must be an integer')
+        if(level):
+            return self.perform_get('/chain/verification/{}?level={}'.format(block_id, level))
+        return self.perform_get('/chain/verification/{}'.format(block_id))

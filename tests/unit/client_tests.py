@@ -245,3 +245,80 @@ class TestClient(TestCase):
         self.assertRaises(ValueError, client.post_custom_contract, name, code, runtime, 1234567, serial)
         self.assertRaises(ValueError, client.post_custom_contract, name, code, runtime, sc_type, 123456)
         self.assertRaises(ValueError, client.post_custom_contract, name, code, runtime, sc_type, serial, 123)
+
+    @patch('dc_sdk.lib.client.make_request')
+    def test_post_library_contract(self, mock_request):
+        client = init_client()
+        name = 'name'
+        library_name = 'currency'
+        env_vars = {'variable': 'value'}
+        client.post_library_contract(name, library_name)
+        expected_body = {
+            'version': '2',
+            'origin': 'library',
+            'name': name,
+            'libraryContractName': library_name
+        }
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='POST',
+                                        path='/chain/contract', json=expected_body)
+        client.post_library_contract(name, library_name, env_vars)
+        expected_body['custom_environment_variables'] = env_vars
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='POST',
+                                        path='/chain/contract', json=expected_body)
+        self.assertRaises(ValueError, client.post_library_contract, 1234, library_name)
+        self.assertRaises(ValueError, client.post_library_contract, name, 1234)
+        self.assertRaises(ValueError, client.post_library_contract, name, library_name, 12345)
+
+    @patch('dc_sdk.lib.client.make_request')
+    def test_update_contract(self, mock_request):
+        client = init_client()
+        name = 'name'
+        status = 'status'
+        sc_type = 'transaction'
+        code = 'some base64 code'
+        runtime = 'nodejs8.10'
+        serial = True
+        env_vars = {'variable': 'value'}
+        client.update_contract(name, status, sc_type, code, runtime, serial)
+        expected_body = {
+            'version': '1',
+            'name': name,
+            'status': status,
+            'sc_type': sc_type,
+            'code': code,
+            'runtime': runtime,
+            'is_serial': serial
+        }
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='PUT',
+                                        path='/chain/contract', json=expected_body)
+        client.update_contract(name, status, sc_type, code, runtime, serial, env_vars)
+        expected_body['custom_environment_variables'] = env_vars
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='PUT',
+                                        path='/chain/contract', json=expected_body)
+        self.assertRaises(ValueError, client.update_contract, 123, status, sc_type, code, runtime, serial)
+        self.assertRaises(ValueError, client.update_contract, name, 1234, sc_type, code, runtime, serial)
+        self.assertRaises(ValueError, client.update_contract, name, status, 12345, code, runtime, serial)
+        self.assertRaises(ValueError, client.update_contract, name, status, sc_type, 123456, runtime, serial)
+        self.assertRaises(ValueError, client.update_contract, name, status, sc_type, code, 1234, serial)
+        self.assertRaises(ValueError, client.update_contract, name, status, sc_type, code, runtime, 12345)
+        self.assertRaises(ValueError, client.update_contract, name, status, sc_type, code, runtime, serial, 123)
+
+    @patch('dc_sdk.lib.client.make_request')
+    def test_get_verification(self, mock_request):
+        client = init_client()
+        block_id = 'block_id'
+        level = 3
+        client.get_verification(block_id, level)
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='GET',
+                                        path='/chain/verification/{}?level={}'.format(block_id, level))
+        client.get_verification(block_id)
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id, verify=client.verify,
+                                        auth_key=client.auth_key, dcid=client.dcid, http_verb='GET',
+                                        path='/chain/verification/{}'.format(block_id))
+        self.assertRaises(ValueError, client.get_verification, 'block_id', '123')
+        self.assertRaises(ValueError, client.get_verification, 1234)
