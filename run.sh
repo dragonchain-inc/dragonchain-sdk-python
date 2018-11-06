@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 # Makes sure we're in this script's directory
-cd $(dirname $(readlink -f $0))
+cd "$(dirname "$(readlink -f "$0")")"
 
 USAGE="usage: run.sh [command]
 
@@ -22,11 +22,11 @@ clean        : remove compiled python/other build/distrubition artifacts from th
 if [ $# -ne 1 ]; then
     echo "$USAGE"
 elif [ "$1" = "unit" ]; then
-    python3 -m coverage run -m unittest tests/unit/*tests.py
+    python3 -m coverage run --branch -m unittest tests/unit/*tests.py
 elif [ "$1" = "integration" ]; then
     python3 -m coverage run -m unittest tests/integration/*tests.py
 elif [ "$1" = "tests" ]; then
-    python3 -m coverage run -m unittest tests/*/*tests.py
+    python3 -m coverage run --branch -m unittest tests/*/*tests.py
 elif [ "$1" = "coverage" ]; then
     python3 -m coverage report -m --include=$(find ./dc_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
 elif [ "$1" = "linter" ]; then

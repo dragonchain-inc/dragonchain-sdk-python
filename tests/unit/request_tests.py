@@ -65,6 +65,7 @@ class TestRequests(TestCase):
 
     def test_lucene_query_string(self):
         self.assertEqual(dc_sdk.lib.request.get_lucene_query_params('q', 's', 1, 2), '?offset=1&limit=2&q=q&sort=s')
+        self.assertEqual(dc_sdk.lib.request.get_lucene_query_params(None, None, 1, 2), '?offset=1&limit=2')
         self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 1)
         self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 1)
         self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 'a', 'a')
