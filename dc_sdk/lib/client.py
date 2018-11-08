@@ -201,7 +201,7 @@ class Client(object):
         Get the status of a dragonchain
         :return: Parsed json response from the chain
         """
-        return self.perform_get('/chain/status')
+        return self.perform_get('/chains/status')
 
     def query_contracts(self, query=None, sort=None, offset=0, limit=10):
         """
@@ -217,7 +217,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chain/contract{}'.format(query_params))
+        return self.perform_get('/chains/contract{}'.format(query_params))
 
     def get_contract(self, name):
         """
@@ -228,7 +228,7 @@ class Client(object):
         """
         if not isinstance(name, str):
             raise ValueError('Smart contract name must be a string')
-        return self.perform_get('/chain/contract/{}'.format(name))
+        return self.perform_get('/chains/contract/{}'.format(name))
 
     def post_library_contract(self, name, library_name, env_vars=None):
         """
@@ -255,7 +255,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chain/contract', body)
+        return self.perform_post('/chains/contract', body)
 
     def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None):
         """
@@ -297,7 +297,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chain/contract', body)
+        return self.perform_post('/chains/contract', body)
 
     def update_contract(self, name, status, sc_type, code, runtime, serial, env_vars=None):
         """
@@ -343,7 +343,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_put('/chain/contract', body)
+        return self.perform_put('/chains/contract', body)
 
     def query_transactions(self, query=None, sort=None, offset=0, limit=10):
         """
@@ -359,7 +359,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chain/transaction{}'.format(query_params))
+        return self.perform_get('/chains/transaction{}'.format(query_params))
 
     def get_transaction(self, txn_id):
         """
@@ -370,7 +370,7 @@ class Client(object):
         """
         if not isinstance(txn_id, str):
             raise ValueError('txn_id must be a string')
-        return self.perform_get('/chain/transaction/{}'.format(txn_id))
+        return self.perform_get('/chains/transaction/{}'.format(txn_id))
 
     def post_transaction(self, txn_type, payload, tag=None):
         """
@@ -396,7 +396,7 @@ class Client(object):
         }
         if tag:
             body['tag'] = tag
-        return self.perform_post('/chain/transaction', body)
+        return self.perform_post('/chains/transaction', body)
 
     def query_blocks(self, query=None, sort=None, offset=0, limit=10):
         """
@@ -412,7 +412,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chain/block{}'.format(query_params))
+        return self.perform_get('/chains/block{}'.format(query_params))
 
     def get_block(self, block_id):
         """
@@ -423,7 +423,7 @@ class Client(object):
         """
         if not isinstance(block_id, str):
             raise ValueError('block_id must be a string')
-        return self.perform_get('/chain/block/{}'.format(block_id))
+        return self.perform_get('/chains/block/{}'.format(block_id))
 
     def get_verification(self, block_id, level=0):
         """
@@ -439,5 +439,5 @@ class Client(object):
         if not isinstance(level, int):
             raise ValueError('level must be an integer')
         if(level):
-            return self.perform_get('/chain/verification/{}?level={}'.format(block_id, level))
-        return self.perform_get('/chain/verification/{}'.format(block_id))
+            return self.perform_get('/chains/verification/{}?level={}'.format(block_id, level))
+        return self.perform_get('/chains/verification/{}'.format(block_id))
