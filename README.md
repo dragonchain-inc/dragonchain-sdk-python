@@ -37,17 +37,26 @@ python3 setup.py install
 
 ## Configuration
 
-In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given dragonchain. This can be loaded into the sdk in various ways, and are checked in the following order of precedence:
+In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given Dragonchain ID. This can be loaded into the sdk in various ways, and are checked in the following order of precedence:
 
-1. The `dc_sdk.client` can be initialized with `auth_key=<KEY>` and `auth_key_id=<KEY_ID>`
-2. The environment variables `DRAGONCHAIN_AUTH_KEY` and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
-3. Write an ini-style credentials file at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id` like so:
+1. The `dc_sdk.client` can be initialized with the parameters `dragonchain_id=<ID>`, `auth_key=<KEY>`, and `auth_key_id=<KEY_ID>`
+2. The environment variables `DRAGONCHAIN_ID`, `DRAGONCHAIN_AUTH_KEY`, and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
+3. Write an ini-style credentials file at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id`. Additionally, you can supply a value for `dragonchain_id` in the `default` section to initialize the client for a specific chain without supplying an ID any other way:
 
     ```ini
+    [default]
+    dragonchain_id = 35a7371c-a20a-4830-9a59-5d654fcd0a4a
+
     [35a7371c-a20a-4830-9a59-5d654fcd0a4a]
     auth_key_id = JSDMWFUJDVTC
     auth_key = n3hlldsFxFdP2De0yMu6A4MFRh1HGzFvn6rJ0ICZzkE
+
+    [28567017-6412-44b6-80b2-12876fb3d4f5]
+    auth_key_id = OGNHGLYIFVUA
+    auth_key = aS73Si7agvX9gfxnLMh6ack9DEuidKiwQxkqBudXl81
     ```
+
+Note: The auth key and auth key id must be supplied in the same way (i.e. you can't supply the auth key only as an environment variable, and the auth key id only in the credentials file), however the dragonchain id can be supplied with any of the 3 methods independently of the auth key/id.
 
 ## Usage
 
@@ -57,7 +66,7 @@ An example of getting a chain's status is shown below:
 ```python
 import dc_sdk
 
-client = dc_sdk.client(id='DRAGONCHAIN ID HERE',
+client = dc_sdk.client(dragonchain_id='OPTIONAL DRAGONCHAIN ID IF NOT CONFIGURED ELSEWHERE',
                        auth_key='OPTIONAL AUTH KEY IF NOT CONFIGURED ELSEWHERE',
                        auth_key_id='OPTIONAL AUTH KEY ID IF NOT CONFIGURED ELSEWHERE')
 

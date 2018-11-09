@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import os
+import re
 from configparser import ConfigParser
 from pathlib import Path
 from dc_sdk.lib.request import make_request, get_lucene_query_params
@@ -60,30 +61,70 @@ def get_credential_file_path():
         return os.path.join(Path.home(), '.dragonchain', 'credentials')
 
 
-def get_auth_key(dragonchain_id=None):
+def get_auth_key(dragonchain_id=None, auth_key=None, auth_key_id=None):
     """
     Get an auth_key/auth_key_id pair
     First checks environment, then configuration files
     :type dragonchain_id: string
     :param dragonchain_id: (optional) dragonchain_id to get keys for (it pulling from config files)
+    :type auth_key_id: string
+    :param auth_key_id: (optional) Dragonchain authorization key ID
+    :type auth_key: string
+    :param auth_key: (optional) Dragonchain authorization key
     :return: Tuple where index 0 is the auth_key_id and index 1 is the auth_key
     """
-    auth_key = os.environ.get('DRAGONCHAIN_AUTH_KEY')
-    auth_key_id = os.environ.get('DRAGONCHAIN_AUTH_KEY_ID')
+    # if both key/keyid aren't passed in, check environment/credentials file
     if auth_key is None or auth_key_id is None:
-        # If both keys aren't in environment variables, check config file
-        if dragonchain_id is None:
-            raise RuntimeError('Could not locate credentials for this client')
-        config = ConfigParser()
-        config.read(get_credential_file_path())
-        try:
-            auth_key = config.get(dragonchain_id, 'auth_key')
-            auth_key_id = config.get(dragonchain_id, 'auth_key_id')
+        auth_key = os.environ.get('DRAGONCHAIN_AUTH_KEY')
+        auth_key_id = os.environ.get('DRAGONCHAIN_AUTH_KEY_ID')
+        if auth_key is None or auth_key_id is None:
+            # If both keys aren't in environment variables, check config file
+            if dragonchain_id is None:
+                raise RuntimeError('Could not locate credentials for this client')
+            config = ConfigParser()
+            config.read(get_credential_file_path())
+            try:
+                auth_key = config.get(dragonchain_id, 'auth_key')
+                auth_key_id = config.get(dragonchain_id, 'auth_key_id')
+                return auth_key_id, auth_key
+            except Exception:
+                raise RuntimeError('Could not locate credentials for this client')
+        else:
             return auth_key_id, auth_key
-        except Exception:
-            raise RuntimeError('Could not locate credentials for this client')
     else:
+        if not isinstance(auth_key, str) or not isinstance(auth_key_id, str):
+            raise ValueError('auth_key and auth_key_id must be specified as a strings')
         return auth_key_id, auth_key
+
+
+def get_dragonchain_id(dragonchain_id=None):
+    """
+    Get the dragonchain id from user input or environment variable
+    :type dragonchain_id: None or string
+    :param dragonchain_id: (optional) the dragonchain id to check
+    :return: String of the dragonchain id
+    """
+    dcid = ''
+    if dragonchain_id is None:
+        # Check environment variable if ID isn't provided explicitly
+        dcid = os.environ.get('DRAGONCHAIN_ID')
+        if dcid is None:
+            # Check config ini file if ID isn't provided explicitly or in environment
+            config = ConfigParser()
+            config.read(get_credential_file_path())
+            try:
+                dcid = config.get('default', 'dragonchain_id')
+            except Exception:
+                raise RuntimeError('Could not locate credentials for this client')
+    elif not isinstance(dragonchain_id, str):
+        raise ValueError('If specified, dragonchain_id must be a string')
+    else:
+        dcid = dragonchain_id
+    dcid = dcid.lower()
+    # Check to see if dragonchain id looks valid (is a UUIDv4)
+    if re.fullmatch(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', dcid):
+        return dcid
+    raise ValueError('Dragonchain id ({}) does not appear to be valid id'.format(dcid))
 
 
 def generate_dragonchain_endpoint(dragonchain_id):
@@ -129,26 +170,18 @@ class Client(object):
         """
         Construct a new 'Client' object
         :type dragonchain_id: string
-        :param dragonchain_id: dragonchain id to associate with this client
+        :param dragonchain_id: (optional) dragonchain id to associate with this client
         :type auth_key_id: string
-        :param auth_key_id: (Optional) Dragonchain authorization key ID
+        :param auth_key_id: (optional) Dragonchain authorization key ID
         :type auth_key: string
-        :param auth_key: (Optional) Dragonchain authorization key
+        :param auth_key: (optional) Dragonchain authorization key
         :type endpoint: string
-        :param endpoint: (Optional) Endpoint of the dragonchain
+        :param endpoint: (optional) Endpoint of the dragonchain
         :type verify: boolean
-        :param verify: (Optional) Verify the TLS certificate of the dragonchain
+        :param verify: (optional) Verify the TLS certificate of the dragonchain
         """
-        if not isinstance(dragonchain_id, str):
-            raise ValueError('Dragonchain ID must be specified as a string')
-        self.dcid = dragonchain_id
-        if auth_key is None or auth_key_id is None:
-            self.auth_key_id, self.auth_key = get_auth_key(self.dcid)
-        else:
-            if not isinstance(auth_key, str) or not isinstance(auth_key_id, str):
-                raise ValueError('auth_key and auth_key_id must be specified as a strings')
-            self.auth_key = auth_key
-            self.auth_key_id = auth_key_id
+        self.dcid = get_dragonchain_id(dragonchain_id)
+        self.auth_key_id, self.auth_key = get_auth_key(self.dcid, auth_key, auth_key_id)
         if endpoint is None:
             self.endpoint = generate_dragonchain_endpoint(dragonchain_id)
         else:
