@@ -193,42 +193,51 @@ class Client(object):
             raise ValueError('verify must be specified as a boolean')
         self.verify = verify
 
-    def perform_get(self, path):
+    def perform_get(self, path, parse_json=True):
         """
         Make a GET request for this chain
         :type path: string
         :param path: path of the request (including any path query parameters)
+        :type parse_json: boolean
+        :param parse_json: if the return from the chain should be parsed as json
         :return: response of the get request
         """
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
-                            http_verb='GET', path=path, verify=self.verify)
+                            http_verb='GET', path=path, verify=self.verify,
+                            parse_json=parse_json)
 
-    def perform_post(self, path, body):
+    def perform_post(self, path, body, parse_json=True):
         """
         Make a json body POST request for this chain
         :type path: string
         :param path: path of the request (including any path query parameters)
         :type body: JSON serializable dictionary
         :param body: body of the request as a python dictionary
+        :type parse_json: boolean
+        :param parse_json: if the return from the chain should be parsed as json
         :return: response of the post request
         """
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
-                            http_verb='POST', path=path, verify=self.verify, json=body)
+                            http_verb='POST', path=path, verify=self.verify,
+                            json=body, parse_json=parse_json)
 
-    def perform_put(self, path, body):
+    def perform_put(self, path, body, parse_json=True):
         """
         Make a json body PUT request for this chain
         :type path: string
         :param path: path of the request (including any path query parameters)
         :type body: JSON serializable dictionary
         :param body: body of the request as a python dictionary
+        :type parse_json: boolean
+        :param parse_json: if the return from the chain should be parsed as json
         :return: response of the put request
         """
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
-                            http_verb='PUT', path=path, verify=self.verify, json=body)
+                            http_verb='PUT', path=path, verify=self.verify,
+                            json=body, parse_json=parse_json)
 
     def get_status(self):
         """
@@ -475,3 +484,22 @@ class Client(object):
         if(level):
             return self.perform_get('/chains/verification/{}?level={}'.format(block_id, level))
         return self.perform_get('/chains/verification/{}'.format(block_id))
+
+    def get_sc_heap(self, key, sc_name=None):
+        """
+        Retrieve data from the heap storage of a smart contract
+        Note: When ran in an actual smart contract, sc_name will be
+              pulled automatically from the environment if not explicitly provided
+        :type key: string
+        :param key: key of the object to get
+        :type sc_name: string
+        :param sc_name: (optional) sc_name heap to get the object from
+        :return: Un-parsed response from the chain
+        """
+        if not isinstance(key, str):
+            raise ValueError('key must be a string')
+        if sc_name is None:
+            sc_name = os.environ.get('SMART_CONTRACT_NAME')
+        if not isinstance(sc_name, str):
+            raise ValueError('sc_name either must be defined in environment or explicitly provided as a string')
+        return self.perform_get('/get/{}/{}'.format(sc_name, key), parse_json=False)

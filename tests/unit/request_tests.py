@@ -103,6 +103,7 @@ class TestRequests(TestCase):
         good_response = requests.Response()
         setattr(good_response, '_content', b'{"valid":"json"}')
         good_response_obj = {'valid': 'json'}
+        good_response_str = '{"valid":"json"}'
         setattr(good_response, 'status_code', 200)
         bad_response = copy.deepcopy(good_response)
         setattr(bad_response, 'status_code', 400)
@@ -116,10 +117,14 @@ class TestRequests(TestCase):
             'dcid': 'a dcid',
             'http_verb': 'get',
             'path': '/some/path',
+            'parse_json': True,
         }
         # Test valid response
         to_test.get_requests_method = MagicMock(return_value=MagicMock(return_value=good_response))
         self.assertDictEqual(to_test.make_request(**kwargs), good_response_obj)
+        kwargs['parse_json'] = False
+        self.assertEqual(to_test.make_request(**kwargs), good_response_str)
+        kwargs['parse_json'] = True
         # Test non-2XX response
         to_test.get_requests_method = MagicMock(return_value=MagicMock(return_value=bad_response))
         self.assertRaises(RuntimeError, to_test.make_request, **kwargs)

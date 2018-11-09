@@ -195,7 +195,7 @@ def make_headers(dcid, timestamp, content_type, authorization, headers):
     return header_dict
 
 
-def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30, verify=True):
+def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30, verify=True, parse_json=True):
     """
     Make an http request to a dragonchain with the given information
     :type endpoint: string
@@ -222,7 +222,9 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
     :param timeout: the timeout to wait for the dragonchain to respond (defaults to 30 seconds if not set)
     :type verify: boolean
     :param verify: specify if the SSL cert of the chain should be verified
-    :return: parsed json response from the dragonchain
+    :type parse_json: boolean
+    :param parse_json: if the return from the chain should be parsed as json
+    :return: response from the dragonchain
     """
     if not isinstance(endpoint, str) or \
        not isinstance(auth_key_id, str) or \
@@ -244,7 +246,9 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
         raise RuntimeError('Error while communicating with the dragonchain: {}'.format(e))
     try:
         if status_code_is_ok(r.status_code):
-            return r.json()
+            if parse_json:
+                return r.json()
+            return r.text
     except Exception as e:
         raise RuntimeError('Unexpected response from the dragonchain. Response: {} | Error: {}'.format(r.text, e))
     raise RuntimeError('Non-2XX Response {} from dragonchain. Error: {}'.format(r.status_code, r.text))
