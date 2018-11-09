@@ -64,7 +64,7 @@ def get_credential_file_path():
 def get_auth_key(dragonchain_id=None, auth_key=None, auth_key_id=None):
     """
     Get an auth_key/auth_key_id pair
-    First checks environment, then configuration files
+    First checks parameters, then environment, then configuration files
     :type dragonchain_id: string
     :param dragonchain_id: (optional) dragonchain_id to get keys for (it pulling from config files)
     :type auth_key_id: string
@@ -99,7 +99,8 @@ def get_auth_key(dragonchain_id=None, auth_key=None, auth_key_id=None):
 
 def get_dragonchain_id(dragonchain_id=None):
     """
-    Get the dragonchain id from user input or environment variable
+    Get the dragonchain id
+    First checks parameters, then environment, then configuration files
     :type dragonchain_id: None or string
     :param dragonchain_id: (optional) the dragonchain id to check
     :return: String of the dragonchain id
@@ -116,9 +117,9 @@ def get_dragonchain_id(dragonchain_id=None):
                 dcid = config.get('default', 'dragonchain_id')
             except Exception:
                 raise RuntimeError('Could not locate credentials for this client')
-    elif not isinstance(dragonchain_id, str):
-        raise ValueError('If specified, dragonchain_id must be a string')
     else:
+        if not isinstance(dragonchain_id, str):
+            raise ValueError('If provided, dragonchain_id must be a string')
         dcid = dragonchain_id
     dcid = dcid.lower()
     # Check to see if dragonchain id looks valid (is a UUIDv4)
