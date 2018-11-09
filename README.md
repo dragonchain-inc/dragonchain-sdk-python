@@ -37,11 +37,15 @@ python3 setup.py install
 
 ## Configuration
 
-In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given Dragonchain ID. This can be loaded into the sdk in various ways, and are checked in the following order of precedence:
+In order to use this SDK, you need to have an Auth Key as well as an Auth Key ID for a given Dragonchain ID. These can be loaded into the sdk in various ways, and are checked in the following order of precedence:
 
 1. The `dc_sdk.client` can be initialized with the parameters `dragonchain_id=<ID>`, `auth_key=<KEY>`, and `auth_key_id=<KEY_ID>`
 2. The environment variables `DRAGONCHAIN_ID`, `DRAGONCHAIN_AUTH_KEY`, and `DRAGONCHAIN_AUTH_KEY_ID` can be set with the appropriate values
-3. Write an ini-style credentials file at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id`. Additionally, you can supply a value for `dragonchain_id` in the `default` section to initialize the client for a specific chain without supplying an ID any other way:
+3. An ini-style credentials file can be provided at `~/.dragonchain/credentials` (or on Windows: `%LOCALAPPDATA%\dragonchain\credentials`) where the section name is the dragonchain id, with values for `auth_key` and `auth_key_id`. Additionally, you can supply a value for `dragonchain_id` in the `default` section to initialize the client for a specific chain without supplying an ID any other way
+
+    ### Example Credentials File
+
+    An example credentials file with keys for 2 chains and a default chain set.
 
     ```ini
     [default]
@@ -60,8 +64,11 @@ Note: The auth key and auth key id must be supplied in the same way (i.e. you ca
 
 ## Usage
 
-After installation, simply import the sdk and initialize a client object with a dragonchain ID to get started.
-An example of getting a chain's status is shown below:
+After installation, simply import the sdk and initialize a client to get started.
+
+### SDK Usage Example
+
+Example initializing the client and printing the status of the dragonchain.
 
 ```python
 import dc_sdk
@@ -70,5 +77,5 @@ client = dc_sdk.client(dragonchain_id='OPTIONAL DRAGONCHAIN ID IF NOT CONFIGURED
                        auth_key='OPTIONAL AUTH KEY IF NOT CONFIGURED ELSEWHERE',
                        auth_key_id='OPTIONAL AUTH KEY ID IF NOT CONFIGURED ELSEWHERE')
 
-client.get_status()
+print(client.get_status())
 ```
