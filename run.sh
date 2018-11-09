@@ -21,6 +21,7 @@ clean        : remove compiled python/other build/distrubition artifacts from th
 
 if [ $# -ne 1 ]; then
     echo "$USAGE"
+    exit 1
 elif [ "$1" = "unit" ]; then
     python3 -m coverage run --branch -m unittest tests/unit/*tests.py
 elif [ "$1" = "integration" ]; then
@@ -44,7 +45,8 @@ elif [ "$1" = "build-dist" ]; then
 elif [ "$1" = "dist-release" ]; then
     python3 -m twine upload dist/*
 elif [ "$1" = "clean" ]; then
-    rm -rf $(find . -name *.pyc) $(find . -name __pycache__) tests/unit/dragonchain .coverage build/ dist/ dc_sdk.egg-info/
+    rm -rfv $(find . -name *.pyc) $(find . -name __pycache__) tests/unit/dragonchain/ .coverage build/ dist/ dc_sdk.egg-info/
 else
     echo "$USAGE"
+    exit 1
 fi
