@@ -199,7 +199,7 @@ class Client(object):
         self.dcid = get_dragonchain_id(dragonchain_id)
         self.auth_key_id, self.auth_key = get_auth_key(self.dcid, auth_key, auth_key_id)
         if endpoint is None:
-            self.endpoint = generate_dragonchain_endpoint(dragonchain_id)
+            self.endpoint = generate_dragonchain_endpoint(self.dcid)
         else:
             if not isinstance(endpoint, str):
                 raise ValueError('endpoint must be specified as a string')
