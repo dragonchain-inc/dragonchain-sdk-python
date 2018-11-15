@@ -26,6 +26,40 @@ class SupportedHashes(Enum):
     sha3_256 = 3
 
 
+def get_supported_hash(hmac_hash_type):
+    """
+    Get the proper SupportedHashes enum from an hmac_hash_type string
+    :type hmac_hash_type: string
+    :param hmac_hash_type: valid supported hmac hash type (i.e. SHA256)
+    :return: proper SupportedHashes enum
+    """
+    if hmac_hash_type == 'SHA256':
+        return SupportedHashes.sha256
+    elif hmac_hash_type == 'BLAKE2b512':
+        return SupportedHashes.blake2b
+    elif hmac_hash_type == 'SHA3-256':
+        return SupportedHashes.sha3_256
+    else:
+        raise NotImplementedError('Hash type is not supported')
+
+
+def get_hash_method(hash_type):
+    """
+    Return a hash method that supports the hashlib .new function
+    :type hash_type: integer
+    :param hash_type: SupportedHashes enum type
+    :return: hash method
+    """
+    if hash_type == SupportedHashes.blake2b:
+        return hashlib.blake2b
+    elif hash_type == SupportedHashes.sha256:
+        return hashlib.sha256
+    elif hash_type == SupportedHashes.sha3_256:
+        return hashlib.sha3_256
+    else:
+        raise NotImplementedError('Unsupported hash type')
+
+
 def bytes_to_b64_str(unencoded_bytes):
     """
     Take a bytes object and output a base64 python string
@@ -79,23 +113,6 @@ def hash_input(hash_type, input_data):
     return hash_method(bytes_from_input(input_data)).digest()
 
 
-def get_hash_method(hash_type):
-    """
-    Return a hash method that supports the hashlib .new function
-    :type hash_type: integer
-    :param hash_type: SupportedHashes enum type
-    :return: hash method
-    """
-    if hash_type == SupportedHashes.blake2b:
-        return hashlib.blake2b
-    elif hash_type == SupportedHashes.sha256:
-        return hashlib.sha256
-    elif hash_type == SupportedHashes.sha3_256:
-        return hashlib.sha3_256
-    else:
-        raise NotImplementedError('Unsupported hash type')
-
-
 def create_hmac(hash_type, secret, message):
     """
     Create an hmac from a given hash type, secret, and message
@@ -128,9 +145,11 @@ def compare_hmac(hash_type, hmac_string, secret, message):
     return hmac.compare_digest(b64decode(hmac_string), create_hmac(hash_type, secret, message))
 
 
-def get_hmac_message_string(http_verb, full_path, dcid, timestamp, content_type="", content=""):
+def get_hmac_message_string(hash_type, http_verb, full_path, dcid, timestamp, content_type='', content=''):
     """
     Generate the HMAC message string given the appropriate inputs
+    :type hash_type: integer
+    :param hash_type: SupportedHashes enum type
     :type http_verb: string
     :param http_verb: HTTP verb of the request
     :type full_path: string
@@ -147,10 +166,10 @@ def get_hmac_message_string(http_verb, full_path, dcid, timestamp, content_type=
     """
     return '{}\n{}\n{}\n{}\n{}\n{}'.format(http_verb.upper(), full_path,
                                            dcid, timestamp, content_type,
-                                           bytes_to_b64_str(hash_input(SupportedHashes.sha256, content)))
+                                           bytes_to_b64_str(hash_input(hash_type, content)))
 
 
-def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timestamp, content_type="", content="", algorithm="SHA256"):
+def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timestamp, content_type='', content='', algorithm='SHA256'):
     """
     Create an authorization header for making requests to dragonchains
     :type auth_key_id: string
@@ -170,16 +189,12 @@ def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timesta
     :type content: bytes or utf-8 encodable string
     :param content: byte object of the body of the request (if it exists)
     :type algorithm: string
-    :param algorithm: hashing algorithm to use with the hmac creation
+    :param algorithm: hashing algorithm to use with the hmac creation (supported by get_supported_hash)
     :return: String of generated authorization header
     """
     # For now, only SHA256 is used for the HMAC/Hashing
     version = '1'
-    message_string = get_hmac_message_string(http_verb, full_path, dcid, timestamp, content_type, content)
-    supported_crypto_hash = None
-    if algorithm == 'SHA256':
-        supported_crypto_hash = SupportedHashes.sha256
-    else:
-        raise NotImplementedError('Hash type is not supported')
+    supported_crypto_hash = get_supported_hash(algorithm)
+    message_string = get_hmac_message_string(supported_crypto_hash, http_verb, full_path, dcid, timestamp, content_type, content)
     hmac = bytes_to_b64_str(create_hmac(supported_crypto_hash, auth_key, message_string))
     return 'DC{}-HMAC-{} {}:{}'.format(version, algorithm, auth_key_id, hmac)

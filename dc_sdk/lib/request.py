@@ -43,6 +43,14 @@ supported_http = {
 }
 
 
+def get_datetime_now():
+    """
+    Simple method to get datetime UTCnow. This method exists for easy test stubbing
+    :return: datetime object of the current time in UTC
+    """
+    return datetime.datetime.utcnow()
+
+
 def get_requests_method(http_verb):
     """
     Get the appropriate requests method for a given http_verb
@@ -195,7 +203,7 @@ def make_headers(dcid, timestamp, content_type, authorization, headers):
     return header_dict
 
 
-def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30, verify=True, parse_json=True):
+def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content_type=None, data=None, json=None, headers=None, timeout=30, verify=True, parse_json=True, algorithm='SHA256', print_curl=False):
     """
     Make an http request to a dragonchain with the given information
     :type endpoint: string
@@ -224,7 +232,11 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
     :param verify: specify if the SSL cert of the chain should be verified
     :type parse_json: boolean
     :param parse_json: if the return from the chain should be parsed as json
-    :return: response from the dragonchain
+    :type algorithm: string
+    :param algorithm: Supported hmac hashing algorithm to use for authorization supported by (lib.auth.get_supported_hash)
+    :type print_curl: boolean
+    :param print_curl: if set to true, rather than making a request, the sdk will instead print the equivalent cURL cli command to make the request instead
+    :return: response from the dragonchain (None if printing as curl instead)
     """
     if not isinstance(endpoint, str) or \
        not isinstance(auth_key_id, str) or \
@@ -236,19 +248,40 @@ def make_request(endpoint, auth_key_id, auth_key, dcid, http_verb, path, content
     requests_method = get_requests_method(http_verb)
     content_type, content = get_content_and_type(content_type, data, json)
     # Add the 'Z' manually to indicate UTC (not added by isoformat)
-    timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
-    authorization = get_authorization(auth_key_id, auth_key, http_verb, path, dcid, timestamp, content_type, content)
+    timestamp = get_datetime_now().isoformat() + 'Z'
+    authorization = get_authorization(auth_key_id, auth_key, http_verb, path, dcid, timestamp, content_type, content, algorithm)
     header_dict = make_headers(dcid, timestamp, content_type, authorization, headers)
-    # Make request with appropriate data
-    try:
-        r = requests_method(url=endpoint + path, data=content, headers=header_dict, timeout=timeout, verify=verify)
-    except Exception as e:
-        raise RuntimeError('Error while communicating with the dragonchain: {}'.format(e))
-    try:
-        if status_code_is_ok(r.status_code):
-            if parse_json:
-                return r.json()
-            return r.text
-    except Exception as e:
-        raise RuntimeError('Unexpected response from the dragonchain. Response: {} | Error: {}'.format(r.text, e))
-    raise RuntimeError('Non-2XX Response {} from dragonchain. Error: {}'.format(r.status_code, r.text))
+    if not print_curl:
+        # Make request with appropriate data
+        try:
+            r = requests_method(url=endpoint + path, data=content, headers=header_dict, timeout=timeout, verify=verify)
+        except Exception as e:
+            raise RuntimeError('Error while communicating with the dragonchain: {}'.format(e))
+        try:
+            if status_code_is_ok(r.status_code):
+                if parse_json:
+                    return r.json()
+                return r.text
+        except Exception as e:
+            raise RuntimeError('Unexpected response from the dragonchain. Response: {} | Error: {}'.format(r.text, e))
+        raise RuntimeError('Non-2XX Response {} from dragonchain. Error: {}'.format(r.status_code, r.text))
+    else:
+        # Print a curl command instead of making an actual request
+
+        # Set base with HTTP method
+        base = 'curl -X {} '.format(http_verb.upper())
+        # Add headers
+        for key in header_dict:
+            base += '-H \'{}: {}\' '.format(key.replace('\'', '\'"\'"\''), header_dict[key].replace('\'', '\'"\'"\''))
+        # Add data if not GET
+        if http_verb.upper() != 'GET':
+            base += '-d \'{}\' '.format(content.replace('\'', '\'"\'"\''))
+        # Add timeout
+        base += '-m {} '.format(timeout)
+        # Add path
+        base += '"{}{}"'.format(endpoint, path)
+        # Add ignore TLS verification if relevant
+        if not verify:
+            base += ' -k'
+        print(base)
+        return None

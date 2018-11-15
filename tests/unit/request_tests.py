@@ -15,7 +15,8 @@ limitations under the License.
 """
 
 from unittest import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, call
+import datetime
 import requests
 import json
 import copy
@@ -23,6 +24,9 @@ import dc_sdk.lib.request
 
 
 class TestRequests(TestCase):
+    def test_datetime(self):
+        self.assertTrue(isinstance(dc_sdk.lib.request.get_datetime_now(), datetime.datetime))
+
     def test_get_requests_method(self):
         self.assertEqual(dc_sdk.lib.request.get_requests_method('get'), requests.get)
         self.assertEqual(dc_sdk.lib.request.get_requests_method('post'), requests.post)
@@ -34,7 +38,8 @@ class TestRequests(TestCase):
         self.assertRaises(ValueError, dc_sdk.lib.request.get_requests_method, 'NOTAMETHOD')
         self.assertRaises(ValueError, dc_sdk.lib.request.get_requests_method, 1234)
 
-    def test_get_content_and_type(self):
+    @patch('builtins.print')
+    def test_get_content_and_type(self, mock_print):
         test_obj = {'thing': 'data'}
         self.assertEqual(dc_sdk.lib.request.get_content_and_type('a type', '', ''), ('', ''))
         self.assertEqual(dc_sdk.lib.request.get_content_and_type('a type', b'some bytes', ''), ('a type', 'some bytes'))
@@ -71,7 +76,8 @@ class TestRequests(TestCase):
         self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 'a', 'a')
         self.assertRaises(ValueError, dc_sdk.lib.request.get_lucene_query_params, 'a', 'a', 1, 'a')
 
-    def test_make_headers(self):
+    @patch('builtins.print')
+    def test_make_headers(self, mock_print):
         dcid = 'an id'
         timestamp = 'a timestamp'
         authorization = 'some authorization'
@@ -99,7 +105,9 @@ class TestRequests(TestCase):
         self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, '', '', '', 123, {})
         self.assertRaises(ValueError, dc_sdk.lib.request.make_headers, 'a', 'a', 'a', 'a', 'not a dict')
 
-    def test_make_request(self):
+    @patch('dc_sdk.lib.request.get_datetime_now', return_value=datetime.datetime(2018, 11, 14, 9, 5, 25, 128176))
+    @patch('builtins.print')
+    def test_make_request(self, mock_print, mock_date):
         good_response = requests.Response()
         setattr(good_response, '_content', b'{"valid":"json"}')
         good_response_obj = {'valid': 'json'}
@@ -118,8 +126,25 @@ class TestRequests(TestCase):
             'http_verb': 'get',
             'path': '/some/path',
             'parse_json': True,
+            'print_curl': True
         }
-        # Test valid response
+        # First test cURL output
+        to_test.make_request(**kwargs)
+        kwargs['http_verb'] = 'post'
+        kwargs['data'] = 'a payload'
+        kwargs['content_type'] = 'mimetype'
+        kwargs['verify'] = False
+        to_test.make_request(**kwargs)
+        expected_str1 = '''curl -X GET -H 'dragonchain: a dcid' -H 'timestamp: 2018-11-14T09:05:25.128176Z' -H 'Authorization: DC1-HMAC-SHA256 an id:exSPjmdo/4wD0DUZWDNiOzkSvhZj0Fd9T2UWPat+6AY=' -m 30 "https://an_endpoint/some/path"'''
+        expected_str2 = '''curl -X POST -H 'dragonchain: a dcid' -H 'timestamp: 2018-11-14T09:05:25.128176Z' -H 'Authorization: DC1-HMAC-SHA256 an id:KV5TWQatQTEjlOb39ibmDTkHPhG2oFwRyU5Ql76jnuI=' -H 'Content-Type: mimetype' -d 'a payload' -m 30 "https://an_endpoint/some/path" -k'''
+        self.assertEqual(mock_print.mock_calls, [call(expected_str1), call(expected_str2)])
+        kwargs['http_verb'] = 'get'
+        del kwargs['content_type']
+        del kwargs['data']
+        del kwargs['verify']
+        # Now test making actual http calls via requests
+        # Test valid responses
+        kwargs['print_curl'] = False
         to_test.get_requests_method = MagicMock(return_value=MagicMock(return_value=good_response))
         self.assertDictEqual(to_test.make_request(**kwargs), good_response_obj)
         kwargs['parse_json'] = False

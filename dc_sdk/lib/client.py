@@ -19,6 +19,7 @@ import re
 from configparser import ConfigParser
 from pathlib import Path
 from dc_sdk.lib.request import make_request, get_lucene_query_params
+from dc_sdk.lib.auth import get_supported_hash
 
 valid_runtimes = [
     'nodejs6.10',
@@ -162,12 +163,24 @@ def is_valid_sc_type(sc_type):
     return True
 
 
+def check_print_curl(print_curl):
+    """
+    Simple function to check if print_curl is a boolean, raise if not
+    :type print_curl: boolean
+    :param print_curl: print_curl variable to check
+    :return: Nothing
+    """
+    if not isinstance(print_curl, bool):
+        raise ValueError('if provided, print_curl must be a boolean')
+
+
 class Client(object):
     """
     A client that interfaces all functionality to a dragonchain with a given id and key
     """
     def __init__(self, dragonchain_id=None, auth_key_id=None,
-                 auth_key=None, endpoint=None, verify=True):
+                 auth_key=None, endpoint=None, verify=True,
+                 algorithm='SHA256'):
         """
         Construct a new 'Client' object
         :type dragonchain_id: string
@@ -180,6 +193,8 @@ class Client(object):
         :param endpoint: (optional) Endpoint of the dragonchain
         :type verify: boolean
         :param verify: (optional) Verify the TLS certificate of the dragonchain
+        :type algorithm: string
+        :param algorithm: (optional) hashing algorithm to use for hmac authentication
         """
         self.dcid = get_dragonchain_id(dragonchain_id)
         self.auth_key_id, self.auth_key = get_auth_key(self.dcid, auth_key, auth_key_id)
@@ -192,22 +207,31 @@ class Client(object):
         if not isinstance(verify, bool):
             raise ValueError('verify must be specified as a boolean')
         self.verify = verify
+        if not isinstance(algorithm, str):
+            raise ValueError('algorithm must be specified as a string')
+        # Check if the provided algorithm is supported by calling to get SupportedHash enum
+        get_supported_hash(algorithm)
+        self.algorithm = algorithm
 
-    def perform_get(self, path, parse_json=True):
+    def perform_get(self, path, parse_json=True, print_curl=False):
         """
         Make a GET request for this chain
         :type path: string
         :param path: path of the request (including any path query parameters)
         :type parse_json: boolean
         :param parse_json: if the return from the chain should be parsed as json
+        :type print_curl: boolean
+        :param print_curl: if set to true, rather than making a request, the sdk will instead print the equivalent cURL cli command to make the request instead
         :return: response of the get request
         """
+        check_print_curl(print_curl)
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
                             http_verb='GET', path=path, verify=self.verify,
-                            parse_json=parse_json)
+                            parse_json=parse_json, algorithm=self.algorithm,
+                            print_curl=print_curl)
 
-    def perform_post(self, path, body, parse_json=True):
+    def perform_post(self, path, body, parse_json=True, print_curl=False):
         """
         Make a json body POST request for this chain
         :type path: string
@@ -216,14 +240,18 @@ class Client(object):
         :param body: body of the request as a python dictionary
         :type parse_json: boolean
         :param parse_json: if the return from the chain should be parsed as json
+        :type print_curl: boolean
+        :param print_curl: if set to true, rather than making a request, the sdk will instead print the equivalent cURL cli command to make the request instead
         :return: response of the post request
         """
+        check_print_curl(print_curl)
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
                             http_verb='POST', path=path, verify=self.verify,
-                            json=body, parse_json=parse_json)
+                            json=body, parse_json=parse_json, algorithm=self.algorithm,
+                            print_curl=print_curl)
 
-    def perform_put(self, path, body, parse_json=True):
+    def perform_put(self, path, body, parse_json=True, print_curl=False):
         """
         Make a json body PUT request for this chain
         :type path: string
@@ -232,21 +260,27 @@ class Client(object):
         :param body: body of the request as a python dictionary
         :type parse_json: boolean
         :param parse_json: if the return from the chain should be parsed as json
+        :type print_curl: boolean
+        :param print_curl: if set to true, rather than making a request, the sdk will instead print the equivalent cURL cli command to make the request instead
         :return: response of the put request
         """
+        check_print_curl(print_curl)
         return make_request(endpoint=self.endpoint, auth_key=self.auth_key,
                             auth_key_id=self.auth_key_id, dcid=self.dcid,
                             http_verb='PUT', path=path, verify=self.verify,
-                            json=body, parse_json=parse_json)
+                            json=body, parse_json=parse_json, algorithm=self.algorithm,
+                            print_curl=print_curl)
 
-    def get_status(self):
+    def get_status(self, print_curl=False):
         """
         Get the status of a dragonchain
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
-        return self.perform_get('/chains/status')
+        return self.perform_get('/chains/status', print_curl=print_curl)
 
-    def query_contracts(self, query=None, sort=None, offset=0, limit=10):
+    def query_contracts(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
         Preform a query on a chain's smart contracts
         :type query: string
@@ -257,23 +291,27 @@ class Client(object):
         :param offset: pagination offset of query (default 0)
         :type limit: integer
         :param limit: pagination limit (default 10)
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/contract{}'.format(query_params))
+        return self.perform_get('/chains/contract{}'.format(query_params), print_curl=print_curl)
 
-    def get_contract(self, name):
+    def get_contract(self, name, print_curl=False):
         """
         Get a specific smart contract
         :type name: string
         :param name: name of the smart contract to get
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(name, str):
             raise ValueError('Smart contract name must be a string')
-        return self.perform_get('/chains/contract/{}'.format(name))
+        return self.perform_get('/chains/contract/{}'.format(name), print_curl=print_curl)
 
-    def post_library_contract(self, name, library_name, env_vars=None):
+    def post_library_contract(self, name, library_name, env_vars=None, print_curl=False):
         """
         Post a library contract to a chain
         :type name: string
@@ -282,6 +320,8 @@ class Client(object):
         :param library_name: the type of contract to be created from the library
         :type env_vars: dictionary
         :param env_vars: environment variables to set for the smart contract
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(name, str):
@@ -298,9 +338,9 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chains/contract', body)
+        return self.perform_post('/chains/contract', body, print_curl=print_curl)
 
-    def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None):
+    def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None, print_curl=False):
         """
         Post a custom contract to a chain
         :type name: string
@@ -315,6 +355,8 @@ class Client(object):
         :param sc_type: how the smart contract is invoked ('transaction' or 'cron')
         :type serial: boolean
         :param serial: whether or not the smart contract must be executed in serial
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(name, str):
@@ -340,9 +382,9 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chains/contract', body)
+        return self.perform_post('/chains/contract', body, print_curl=print_curl)
 
-    def update_contract(self, name, status, sc_type, code, runtime, serial, env_vars=None):
+    def update_contract(self, name, status, sc_type, code, runtime, serial, env_vars=None, print_curl=False):
         """
         Update an existing smart contract
         :type name: string
@@ -359,6 +401,8 @@ class Client(object):
         :param serial: whether or not the smart contract must be executed in serial
         :type env_vars: dictionary
         :param env_vars: environment variables to set for the smart contract
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(name, str):
@@ -386,9 +430,9 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_put('/chains/contract', body)
+        return self.perform_put('/chains/contract', body, print_curl=print_curl)
 
-    def query_transactions(self, query=None, sort=None, offset=0, limit=10):
+    def query_transactions(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
         Preform a query on a chain's transactions
         :type query: string
@@ -399,23 +443,27 @@ class Client(object):
         :param offset: pagination offset of query (default 0)
         :type limit: integer
         :param limit: pagination limit (default 10)
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/transaction{}'.format(query_params))
+        return self.perform_get('/chains/transaction{}'.format(query_params), print_curl=print_curl)
 
-    def get_transaction(self, txn_id):
+    def get_transaction(self, txn_id, print_curl=False):
         """
         Get a specific transaction by id
         :type txn_id: string
         :param txn_id: transaction id to get
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(txn_id, str):
             raise ValueError('txn_id must be a string')
-        return self.perform_get('/chains/transaction/{}'.format(txn_id))
+        return self.perform_get('/chains/transaction/{}'.format(txn_id), print_curl=print_curl)
 
-    def post_transaction(self, txn_type, payload, tag=None):
+    def post_transaction(self, txn_type, payload, tag=None, print_curl=False):
         """
         Post a transaction to a chain
         :type txn_type: string
@@ -424,6 +472,8 @@ class Client(object):
         :param payload: the payload of the transaction to create
         :type tag: string
         :param tag: (optional) the tag of the transaction to create
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(txn_type, str):
@@ -439,9 +489,9 @@ class Client(object):
         }
         if tag:
             body['tag'] = tag
-        return self.perform_post('/chains/transaction', body)
+        return self.perform_post('/chains/transaction', body, print_curl=print_curl)
 
-    def query_blocks(self, query=None, sort=None, offset=0, limit=10):
+    def query_blocks(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
         Preform a query on a chain's blocks
         :type query: string
@@ -452,29 +502,35 @@ class Client(object):
         :param offset: pagination offset of query (default 0)
         :type limit: integer
         :param limit: pagination limit (default 10)
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/block{}'.format(query_params))
+        return self.perform_get('/chains/block{}'.format(query_params), print_curl=print_curl)
 
-    def get_block(self, block_id):
+    def get_block(self, block_id, print_curl=False):
         """
         Get a specific block by id
         :type block_id: string
         :param block_id: block id to get
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(block_id, str):
             raise ValueError('block_id must be a string')
-        return self.perform_get('/chains/block/{}'.format(block_id))
+        return self.perform_get('/chains/block/{}'.format(block_id), print_curl=print_curl)
 
-    def get_verification(self, block_id, level=0):
+    def get_verification(self, block_id, level=0, print_curl=False):
         """
         Get all or level specific verifications for a block by id
         :type block_id: string
         :param block_id: block id to get
         :type level: integer
         :param level: specific level of blocks to return between 2 and 5
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
         if not isinstance(block_id, str):
@@ -483,9 +539,9 @@ class Client(object):
             raise ValueError('level must be an integer')
         if(level):
             return self.perform_get('/chains/verification/{}?level={}'.format(block_id, level))
-        return self.perform_get('/chains/verification/{}'.format(block_id))
+        return self.perform_get('/chains/verification/{}'.format(block_id), print_curl=print_curl)
 
-    def get_sc_heap(self, key, sc_name=None):
+    def get_sc_heap(self, key, sc_name=None, print_curl=False):
         """
         Retrieve data from the heap storage of a smart contract
         Note: When ran in an actual smart contract, sc_name will be
@@ -494,6 +550,8 @@ class Client(object):
         :param key: key of the object to get
         :type sc_name: string
         :param sc_name: (optional) sc_name heap to get the object from
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Un-parsed response from the chain
         """
         if not isinstance(key, str):
@@ -502,4 +560,4 @@ class Client(object):
             sc_name = os.environ.get('SMART_CONTRACT_NAME')
         if not isinstance(sc_name, str):
             raise ValueError('sc_name either must be defined in environment or explicitly provided as a string')
-        return self.perform_get('/get/{}/{}'.format(sc_name, key), parse_json=False)
+        return self.perform_get('/get/{}/{}'.format(sc_name, key), parse_json=False, print_curl=print_curl)

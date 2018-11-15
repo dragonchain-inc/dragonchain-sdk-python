@@ -23,6 +23,13 @@ sha3_256 = dc_sdk.lib.auth.SupportedHashes.sha3_256
 
 
 class TestAuth(TestCase):
+    def test_get_supported_hashing(self):
+        self.assertEqual(dc_sdk.lib.auth.get_supported_hash('SHA256'), sha256)
+        self.assertEqual(dc_sdk.lib.auth.get_supported_hash('BLAKE2b512'), blake2b)
+        self.assertEqual(dc_sdk.lib.auth.get_supported_hash('SHA3-256'), sha3_256)
+        self.assertRaises(NotImplementedError, dc_sdk.lib.auth.get_supported_hash, 'INVALID')
+        self.assertRaises(NotImplementedError, dc_sdk.lib.auth.hash_input, 99999, 'some input')
+
     def test_bytes_from_input(self):
         self.assertRaises(ValueError, dc_sdk.lib.auth.bytes_from_input, 1234)
         self.assertRaises(ValueError, dc_sdk.lib.auth.bytes_from_input, "\ud83d")
@@ -38,7 +45,6 @@ class TestAuth(TestCase):
         self.assertEqual(dc_sdk.lib.auth.hash_input(sha256, 'some input'), b'+\xe3[\xc6q\xdc\x91.\x7fT\x0f\x0eZ.\x91^\xf6\xa4\xa4\xdb\xd2\xad\xa5\xba\x9c\x1d+\x11{\xfc\x90|')
         self.assertEqual(dc_sdk.lib.auth.hash_input(sha3_256, 'some input'), b'\x18\xd6@c\x0b\xbe\xc8`\xdb@t\x1e\xf2\xd65g\xe2Z\x04\x90\xac\xc3\x9f\xf1\xceC\xee\xde\xf4\xb1\xe7x')
         self.assertEqual(dc_sdk.lib.auth.hash_input(blake2b, 'some input'), b'k\xd3_\x97J/\x0e\x93_\xa1\x15(\xbf"\xab\xb5\xb6\x9f\x9d\xee8\xed\xf6\xc2RX\xea<\xb4\xee\x03:|a@\xd8\x9f\xab\xa6\x06\x89r\x8fa-]\xf7\xda\xb9=\xa7\xd0z\xe6XB\xae$\xd0\x1fP\xa2+\xa9')
-        self.assertRaises(NotImplementedError, dc_sdk.lib.auth.hash_input, 99999, 'some input')
 
     def test_hmac_operations(self):
         secret = '12345'
@@ -60,11 +66,13 @@ class TestAuth(TestCase):
             'http_verb': 'get',
             'full_path': '/chain/transaction',
             'dcid': 'a dragonchain id',
-            'timestamp': 12345,
+            'timestamp': '2017-06-10T20:40:05.191023Z',
             'content_type': '',
             'content': '',
             'algorithm': 'SHA256'
         }
-        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-SHA256 id:XBzopP+FZkSKZezdNzF0WW1I8E98Fp+q/8AicSk9FqY=')
-        kwargs['algorithm'] = 'NOTAHASH'
-        self.assertRaises(NotImplementedError, dc_sdk.lib.auth.get_authorization, **kwargs)
+        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-SHA256 id:vQ0tR2yCHE9/U9aN3Cs2fXtDcgbSew0RQrPx313+nxU=')
+        kwargs['algorithm'] = 'BLAKE2b512'
+        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-BLAKE2b512 id:D5KcsMTiyblQOMmA0m3dxqnjJMVjMbmMGGNLCZedKRF6PU6TrjsQ2fatELpXKkzsNHic5T7twGjY/b1ryvH6Jg==')
+        kwargs['algorithm'] = 'SHA3-256'
+        self.assertEqual(dc_sdk.lib.auth.get_authorization(**kwargs), 'DC1-HMAC-SHA3-256 id:R9v3eH9iIgXUWICukGAlD8GNqOjQrm3/IUwQl1wMVqw=')
