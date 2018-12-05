@@ -278,7 +278,7 @@ class Client(object):
         :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Parsed json response from the chain
         """
-        return self.perform_get('/chains/status', print_curl=print_curl)
+        return self.perform_get('/status', print_curl=print_curl)
 
     def query_contracts(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
@@ -296,7 +296,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/contract{}'.format(query_params), print_curl=print_curl)
+        return self.perform_get('/contract{}'.format(query_params), print_curl=print_curl)
 
     def get_contract(self, name, print_curl=False):
         """
@@ -309,7 +309,7 @@ class Client(object):
         """
         if not isinstance(name, str):
             raise ValueError('Smart contract name must be a string')
-        return self.perform_get('/chains/contract/{}'.format(name), print_curl=print_curl)
+        return self.perform_get('/contract/{}'.format(name), print_curl=print_curl)
 
     def post_library_contract(self, name, library_name, env_vars=None, print_curl=False):
         """
@@ -338,7 +338,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chains/contract', body, print_curl=print_curl)
+        return self.perform_post('/contract/{}'.format(name), body, print_curl=print_curl)
 
     def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None, print_curl=False):
         """
@@ -382,7 +382,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_post('/chains/contract', body, print_curl=print_curl)
+        return self.perform_post('/contract/{}'.format(name), body, print_curl=print_curl)
 
     def update_contract(self, name, status, sc_type, code, runtime, serial, env_vars=None, print_curl=False):
         """
@@ -430,7 +430,7 @@ class Client(object):
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
-        return self.perform_put('/chains/contract', body, print_curl=print_curl)
+        return self.perform_put('/contract', body, print_curl=print_curl)
 
     def query_transactions(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
@@ -448,7 +448,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/transaction{}'.format(query_params), print_curl=print_curl)
+        return self.perform_get('/transaction{}'.format(query_params), print_curl=print_curl)
 
     def get_transaction(self, txn_id, print_curl=False):
         """
@@ -461,7 +461,7 @@ class Client(object):
         """
         if not isinstance(txn_id, str):
             raise ValueError('txn_id must be a string')
-        return self.perform_get('/chains/transaction/{}'.format(txn_id), print_curl=print_curl)
+        return self.perform_get('/transaction/{}'.format(txn_id), print_curl=print_curl)
 
     def post_transaction(self, txn_type, payload, tag=None, print_curl=False):
         """
@@ -489,7 +489,7 @@ class Client(object):
         }
         if tag:
             body['tag'] = tag
-        return self.perform_post('/chains/transaction', body, print_curl=print_curl)
+        return self.perform_post('/transaction', body, print_curl=print_curl)
 
     def query_blocks(self, query=None, sort=None, offset=0, limit=10, print_curl=False):
         """
@@ -507,7 +507,7 @@ class Client(object):
         :return: Parsed json response from the chain
         """
         query_params = get_lucene_query_params(query, sort, offset, limit)
-        return self.perform_get('/chains/block{}'.format(query_params), print_curl=print_curl)
+        return self.perform_get('/block{}'.format(query_params), print_curl=print_curl)
 
     def get_block(self, block_id, print_curl=False):
         """
@@ -520,7 +520,7 @@ class Client(object):
         """
         if not isinstance(block_id, str):
             raise ValueError('block_id must be a string')
-        return self.perform_get('/chains/block/{}'.format(block_id), print_curl=print_curl)
+        return self.perform_get('/block/{}'.format(block_id), print_curl=print_curl)
 
     def get_verification(self, block_id, level=0, print_curl=False):
         """
@@ -538,8 +538,8 @@ class Client(object):
         if not isinstance(level, int):
             raise ValueError('level must be an integer')
         if(level):
-            return self.perform_get('/chains/verification/{}?level={}'.format(block_id, level))
-        return self.perform_get('/chains/verification/{}'.format(block_id), print_curl=print_curl)
+            return self.perform_get('/verification/{}?level={}'.format(block_id, level))
+        return self.perform_get('/verification/{}'.format(block_id), print_curl=print_curl)
 
     def get_sc_heap(self, key, sc_name=None, print_curl=False):
         """

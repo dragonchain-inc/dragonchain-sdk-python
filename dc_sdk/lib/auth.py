@@ -153,7 +153,7 @@ def get_hmac_message_string(hash_type, http_verb, full_path, dcid, timestamp, co
     :type http_verb: string
     :param http_verb: HTTP verb of the request
     :type full_path: string
-    :param full_path: full path of the request after the FQDN (including any query parameters) (i.e. /chain/transaction)
+    :param full_path: full path of the request after the FQDN (including any query parameters) (i.e. /transaction)
     :type dcid: string
     :param dcid: dragonchain id of the request (must match dragonchain header)
     :type timestamp: int or string
@@ -179,7 +179,7 @@ def get_authorization(auth_key_id, auth_key, http_verb, full_path, dcid, timesta
     :type http_verb: string
     :param http_verb: HTTP verb of the request
     :type full_path: string
-    :param full_path: full path of the request after the FQDN (including any query parameters) (i.e. /chain/transaction)
+    :param full_path: full path of the request after the FQDN (including any query parameters) (i.e. /transaction)
     :type dcid: string
     :param dcid: dragonchain id of the request (must match dragonchain header)
     :type timestamp: int or string
