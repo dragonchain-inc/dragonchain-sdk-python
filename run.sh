@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 # Makes sure we're in this script's directory
-cd "$(dirname "$(readlink -f "$0")")"
+cd "$(dirname "$(readlink -n "$0")")"
 
 USAGE="usage: run.sh [command]
 

@@ -549,7 +549,7 @@ class Client(object):
         :type key: string
         :param key: key of the object to get
         :type sc_name: string
-        :param sc_name: (optional) sc_name heap to get the object from
+        :param sc_name: (optional) sc_name heap to get the object from. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
         :type print_curl: boolean
         :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
         :return: Un-parsed response from the chain
@@ -559,5 +559,31 @@ class Client(object):
         if sc_name is None:
             sc_name = os.environ.get('SMART_CONTRACT_NAME')
         if not isinstance(sc_name, str):
-            raise ValueError('sc_name either must be defined in environment or explicitly provided as a string')
+            raise ValueError('sc_name either must be defined in SMART_CONTRACT_NAME env var or explicitly provided as a string')
         return self.perform_get('/get/{}/{}'.format(sc_name, key), parse_json=False, print_curl=print_curl)
+
+    def list_sc_heap(self, sc_name=None, folder=None, print_curl=False):
+        """
+        Lists all objects stored in a smart contracts heap
+        Note: When ran in an actual smart contract, sc_name will be
+              pulled automatically from the environment if not explicitly provided
+        :type sc_name: string
+        :param sc_name: (optional) sc_name heap to list. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
+        :type folder: string
+        :param folder: (optional) the folder to list in the heap. If not provided, it will default to the root of the heap
+        :type print_curl: boolean
+        :param print_curl: if set, print the cli cURL command to make the request without actually calling the chain
+        :return: Parsed json response from the chain
+        """
+        if sc_name is None:
+            sc_name = os.environ.get('SMART_CONTRACT_NAME')
+        if not isinstance(sc_name, str):
+            raise ValueError('sc_name either must be defined in SMART_CONTRACT_NAME env var or explicitly provided as a string')
+        list_path = '{}/'.format(sc_name)
+        if folder is not None:
+            if not isinstance(folder, str):
+                raise ValueError('if folder is provided, it must be a string')
+            if folder.endswith('/'):
+                raise ValueError('do not include a trailing slash on the folder name')
+            list_path = '{}{}/'.format(list_path, folder)
+        return self.perform_get('/list/{}'.format(list_path), print_curl=print_curl)

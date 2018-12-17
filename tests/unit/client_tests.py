@@ -394,3 +394,31 @@ class TestClient(TestCase):
         # Test bad input
         self.assertRaises(ValueError, client.get_sc_heap, 123)
         self.assertRaises(ValueError, client.get_sc_heap, 'key', 123)
+
+    @patch('dc_sdk.lib.client.make_request')
+    def test_list_sc_heap(self, mock_request):
+        client = init_client()
+        sc_name = 'sc_name'
+        client.list_sc_heap(sc_name)
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id,
+                                        verify=client.verify, auth_key=client.auth_key, dcid=client.dcid,
+                                        http_verb='GET', path='/list/{}/'.format(sc_name),
+                                        parse_json=True, algorithm=client.algorithm, print_curl=False)
+        # Test pulling from env
+        os.environ['SMART_CONTRACT_NAME'] = 'sc_name'
+        client.list_sc_heap()
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id,
+                                        verify=client.verify, auth_key=client.auth_key, dcid=client.dcid,
+                                        http_verb='GET', path='/list/{}/'.format(sc_name),
+                                        parse_json=True, algorithm=client.algorithm, print_curl=False)
+        # Test with folder var
+        folder_name = 'test'
+        client.list_sc_heap(sc_name, folder_name)
+        mock_request.assert_called_with(endpoint=client.endpoint, auth_key_id=client.auth_key_id,
+                                        verify=client.verify, auth_key=client.auth_key, dcid=client.dcid,
+                                        http_verb='GET', path='/list/{}/{}/'.format(sc_name, folder_name),
+                                        parse_json=True, algorithm=client.algorithm, print_curl=False)
+        # Test bad input
+        self.assertRaises(ValueError, client.list_sc_heap, 123)
+        self.assertRaises(ValueError, client.list_sc_heap, 'sc', 123)
+        self.assertRaises(ValueError, client.list_sc_heap, 'sc', 'thing/')
