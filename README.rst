@@ -21,7 +21,7 @@ The easiest way to install this repository is with pip. Simply run:
 
 ::
 
-   python3 -m pip install dragonchain_sdk
+   python3 -m pip install dragonchain-sdk
 
 You can also install this package from source. To do so, get the source
 code (via git clone like
@@ -56,7 +56,7 @@ In order to use this SDK, you need to have an Auth Key as well as an
 Auth Key ID for a given Dragonchain ID. These can be loaded into the sdk
 in various ways, and are checked in the following order of precedence:
 
-1. The ``dragonchain_sdk.main`` can be initialized with the parameters
+1. The ``dragonchain_sdk.client`` can be initialized with the parameters
    ``dragonchain_id=<ID>``, ``auth_key=<KEY>``, and
    ``auth_key_id=<KEY_ID>``
 
@@ -90,7 +90,5 @@ in various ways, and are checked in the following order of precedence:
       [28567017-6412-44b6-80b2-12876fb3d4f5]
       auth_key_id = OGNHGLYIFVUA
       auth_key = aS73Si7agvX9gfxnLMh6ack9DEuidKiwQxkqBudXl81
-
-Note: The auth key and auth key id must be supplied
 
 .. |Build Status| image:: https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieXNKb0Q3Y2doNkVsMFRZdHVqVWwyTm5lWjBjLzFVYjZCRFlhci9DbUo0aE9lcTlzQ3ErcitsV0NwSUlNVzJuMldFeEJUQUk5dnRlaXVTbUdpNW55NmFNPSIsIml2UGFyYW1ldGVyU3BlYyI6Ii9USGRmNEgxeE5wUU9FMVciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master
