@@ -6,3 +6,4 @@ setuptools
 wheel
 flake8
 bandit
+sphinx
