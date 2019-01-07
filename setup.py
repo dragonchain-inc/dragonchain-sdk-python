@@ -18,6 +18,7 @@ setup(
     author_email='support@dragonchain.com',
     description='Dragonchain SDK for Python',
     long_description=open('README.rst').read(),
+    long_description_content_type='text/x-rst',
     url='https://github.com/dragonchain-inc/dragonchain-sdk-python',
     packages=find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']),
     scripts=[],
