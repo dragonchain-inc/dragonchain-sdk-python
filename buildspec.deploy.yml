@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - ./run.sh install-req
+  build:
+    commands:
+      - ./run.sh docs
+      - ./run.sh build-dist
+      - ./run.sh dist-release
+      - aws s3 rm --recursive s3://dragonchain-sdk-python-docs/latest/*
+      - aws s3 cp --recursive ./docs/.build/html s3://dragonchain-sdk-python-docs/latest
+      - aws s3 rm --recursive s3://dragonchain-sdk-python-docs/$VERSION/*
+      - aws s3 cp --recursive ./docs/.build/html s3://dragonchain-sdk-python-docs/$VERSION/
+      - aws s3api put-object --website-redirect-location /latest --content-type text/html --bucket dragonchain-sdk-python-docs --key index.html

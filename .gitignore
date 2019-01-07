@@ -32,6 +32,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+tests/unit/dragonchain/credentials
 
 # Environments
 env
@@ -56,3 +57,8 @@ desktop.ini
 .idea
 .vscode
 .vs
+
+# Autodocs
+_build
+.build
+.static

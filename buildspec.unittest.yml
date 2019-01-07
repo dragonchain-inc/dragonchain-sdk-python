@@ -6,9 +6,7 @@ phases:
       - ./run.sh install-req
   build:
     commands:
-      - ./run.sh build
-      - ./run.sh build-dist
       - ./run.sh linter
-      - ./run.sh tests
-      - ./run.sh coverage
       - ./run.sh bandit
+      - ./run.sh unit
+      - ./run.sh coverage
