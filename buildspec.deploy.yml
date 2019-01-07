@@ -6,8 +6,7 @@ phases:
       - ./run.sh install-req
   build:
     commands:
-      - ./run.sh docs
-      - ./run.sh build-dist
+      - ./run.sh full-build
       - ./run.sh dist-release
       - aws s3 rm --recursive s3://dragonchain-sdk-python-docs/latest/*
       - aws s3 cp --recursive ./docs/.build/html s3://dragonchain-sdk-python-docs/latest

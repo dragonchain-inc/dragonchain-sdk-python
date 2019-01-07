@@ -1,0 +1,23 @@
+language: python
+branches:
+  only:
+  - master
+env:
+  global:
+    CC_TEST_REPORTER_ID=448703f092c4869cc5645ae1c658e8536b8a746fbd0e0cdb91a963045d0714ed
+python:
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+install:
+  - ./run.sh install-req
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+script:
+  - ./run.sh full-build
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

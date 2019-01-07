@@ -18,7 +18,7 @@ install      : install the project from source (depends on running build first)
 install-req  : install the python dependencies to dev on the project
 build-dist   : build the distribution artifcats for the project from source
 clean        : remove compiled python/docs/other build or distrubition artifacts from the local project
-pr-test      : run all of the tests that the pull request would check, locally
+full-build   : run all of the tests that the pull request/build would check, locally
 dist-release : upload and distribute the artifacts from build-dist to pypi"
 
 if [ $# -ne 1 ]; then
@@ -35,7 +35,8 @@ elif [ "$1" = "tests" ]; then
     echo "\nRunning integration tests"
     sh run.sh integration
 elif [ "$1" = "coverage" ]; then
-    python3 -m coverage report -m --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
+    python3 -m coverage report --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
+    python3 -m coverage xml --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
 elif [ "$1" = "linter" ]; then
     python3 -m flake8 $(find . -name \*.py)
 elif [ "$1" = "bandit" ]; then
@@ -53,8 +54,8 @@ elif [ "$1" = "install-req" ]; then
 elif [ "$1" = "build-dist" ]; then
     python3 setup.py sdist bdist_wheel
 elif [ "$1" = "clean" ]; then
-    rm -rfv $(find . -name *.pyc) $(find . -name __pycache__) .coverage build/ dist/ dragonchain_sdk.egg-info/ docs/.build/
-elif [ "$1" = "pr-test" ]; then
+    rm -rfv $(find . -name *.pyc) $(find . -name __pycache__) .coverage coverage.xml build/ dist/ dragonchain_sdk.egg-info/ docs/.build/
+elif [ "$1" = "full-build" ]; then
     set +e
     echo "\nChecking for linting errors\n"
     sh run.sh linter
@@ -72,9 +73,7 @@ elif [ "$1" = "pr-test" ]; then
     echo "\nRunning all tests\n"
     sh run.sh tests
     [ $? -ne 0 ] && echo "\n!!! Tests Failure !!!" && exit 1
-    echo "\nCleaning up\n"
-    sh run.sh clean
-    echo "\nSuccess!"
+    echo "\nSuccess!\nUse 'run.sh clean' to cleanup if desired"
 elif [ "$1" = "dist-release" ]; then
     python3 -m twine upload dist/*
 else

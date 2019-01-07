@@ -1,4 +1,12 @@
-|Build Status|
+.. image:: https://travis-ci.org/dragonchain-inc/dragonchain-sdk-python.svg?branch=master
+   :target: https://travis-ci.org/dragonchain-inc/dragonchain-sdk-python
+   :alt: Build Status
+.. image:: https://api.codeclimate.com/v1/badges/d9ab43d29af318ec4121/test_coverage
+   :target: https://codeclimate.com/github/dragonchain-inc/dragonchain-sdk-python/test_coverage
+   :alt: Test Coverage
+.. image:: https://pypip.in/v/dragonchain-sdk/badge.png
+   :target: https://pypi.org/project/dragonchain-sdk/
+   :alt: Latest PyPI version
 
 Intro
 -----
@@ -6,6 +14,13 @@ Intro
 This is the Python 3 SDK for interacting with a dragonchain. It provides
 functionality to be able to interact with a dragonchain through a simple
 sdk with minimal configuration needed.
+
+Documentation
+-------------
+
+Documentation for this SDK can be found at the following location:
+
+https://python-sdk-docs.dragonchain.com/latest/
 
 Installation
 ------------
@@ -91,4 +106,4 @@ in various ways, and are checked in the following order of precedence:
       auth_key_id = OGNHGLYIFVUA
       auth_key = aS73Si7agvX9gfxnLMh6ack9DEuidKiwQxkqBudXl81
 
-.. |Build Status| image:: https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieXNKb0Q3Y2doNkVsMFRZdHVqVWwyTm5lWjBjLzFVYjZCRFlhci9DbUo0aE9lcTlzQ3ErcitsV0NwSUlNVzJuMldFeEJUQUk5dnRlaXVTbUdpNW55NmFNPSIsIml2UGFyYW1ldGVyU3BlYyI6Ii9USGRmNEgxeE5wUU9FMVciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master
+
