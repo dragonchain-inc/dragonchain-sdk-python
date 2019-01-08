@@ -141,22 +141,29 @@ class TestRequestsMethods(TestCase):
         self.assertRaises(TypeError, self.request.get_lucene_query_params, offset=[])
 
     def test_get_lucene_query_params(self):
-        self.assertEqual(
-            self.request.get_lucene_query_params(query='test:"val"', sort='test:desc', offset=0, limit=100),
-            '?offset=0&limit=100&q=test:"val"&sort=test:desc'
-        )
+        query = self.request.get_lucene_query_params(query='test:"val"', sort='test:desc', offset=0, limit=100)
+        self.assertEqual(query[0], '?')
+        self.assertTrue('offset=0' in query)
+        self.assertTrue('limit=100' in query)
+        self.assertTrue('q=test:"val"' in query)
+        self.assertTrue('sort=test:desc' in query)
+        self.assertEqual(query.count('&'), 3)
 
     def test_get_lucene_query_params_no_query(self):
-        self.assertEqual(
-            self.request.get_lucene_query_params(sort='test:desc', offset=0, limit=100),
-            '?offset=0&limit=100&sort=test:desc'
-        )
+        query = self.request.get_lucene_query_params(sort='test:desc', offset=0, limit=100)
+        self.assertEqual(query[0], '?')
+        self.assertTrue('offset=0' in query)
+        self.assertTrue('limit=100' in query)
+        self.assertTrue('sort=test:desc' in query)
+        self.assertEqual(query.count('&'), 2)
 
     def test_get_lucene_query_params_no_sort(self):
-        self.assertEqual(
-            self.request.get_lucene_query_params(query='test:"val"', offset=0, limit=100),
-            '?offset=0&limit=100&q=test:"val"'
-        )
+        query = self.request.get_lucene_query_params(query='test:"val"', offset=0, limit=100)
+        self.assertEqual(query[0], '?')
+        self.assertTrue('offset=0' in query)
+        self.assertTrue('limit=100' in query)
+        self.assertTrue('q=test:"val"' in query)
+        self.assertEqual(query.count('&'), 2)
 
     def test_make_headers(self):
         self.assertEqual(self.request.make_headers('Timestamp', 'Auth', ''), {'dragonchain': 'TestID', 'timestamp': 'Timestamp', 'Authorization': 'Auth'})

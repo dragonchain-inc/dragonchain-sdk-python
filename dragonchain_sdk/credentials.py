@@ -14,7 +14,6 @@ import hashlib
 import hmac
 import os
 import sys
-import pathlib
 import base64
 import logging
 from dragonchain_sdk import exceptions
@@ -125,7 +124,7 @@ class Credentials(object):
             path = os.path.join(os.path.expandvars('%LOCALAPPDATA%'), 'dragonchain', 'credentials')
         else:
             logger.debug('Posix OS detected')
-            path = os.path.join(pathlib.Path.home(), '.dragonchain', 'credentials')
+            path = os.path.join(os.path.expanduser("~"), '.dragonchain', 'credentials')
         logger.debug('Credentials file path: {}'.format(path))
         return path
 

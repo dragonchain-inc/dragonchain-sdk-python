@@ -35,7 +35,7 @@ elif [ "$1" = "tests" ]; then
     echo "\nRunning integration tests"
     sh run.sh integration
 elif [ "$1" = "coverage" ]; then
-    python3 -m coverage report --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
+    python3 -m coverage report -m --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
     python3 -m coverage xml --include=$(find ./dragonchain_sdk/ | tr '\n' ',' | rev | cut -c 2- | rev)
 elif [ "$1" = "linter" ]; then
     python3 -m flake8 $(find . -name \*.py)

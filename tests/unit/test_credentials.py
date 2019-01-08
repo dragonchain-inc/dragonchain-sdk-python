@@ -86,7 +86,6 @@ class TestCredentialsInitialization(TestCase):
             self.assertEqual(credentials.algorithm, 'BLAKE2b512')
             self.assertEqual(credentials.hash_method, hashlib.blake2b)
 
-    if sys.version_info >= (3, 6):
         def test_get_correct_hash_algorithm_sha3_256(self):
             credentials = Credentials(dragonchain_id='test', auth_key='test', auth_key_id='test', algorithm='SHA3-256')
             self.assertEqual(credentials.algorithm, 'SHA3-256')
@@ -115,7 +114,7 @@ class TestCredentialsMethods(TestCase):
 
     @patch('os.path.join', return_value='full path')
     @patch('os.path.expandvars', return_value='expanded')
-    @patch('pathlib.Path.home', return_value='home')
+    @patch('os.path.expanduser', return_value='home')
     def test_get_credential_file_path_posix(self, mock_home, mock_expand, mock_join):
         os.name = 'posix'
         self.assertEqual(self.credentials.get_credential_file_path(), 'full path')
@@ -125,6 +124,10 @@ class TestCredentialsMethods(TestCase):
 
     def test_get_hash_method_raises_not_implemented_error(self):
         self.assertRaises(NotImplementedError, self.credentials.get_hash_method, 'not_implemented')
+
+    @patch('sys.version_info', (3, 5))
+    def test_get_hash_method_raises_not_implemented_error_legacy(self):
+        self.assertRaises(NotImplementedError, self.credentials.get_hash_method, 'SHA3-256')
 
     def test_bytes_to_b64_string_raises_type_error(self):
         self.assertRaises(TypeError, self.credentials.bytes_to_b64_str, 'not bytes')
