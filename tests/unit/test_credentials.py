@@ -104,13 +104,11 @@ class TestCredentialsMethods(TestCase):
 
     @patch('os.path.join', return_value='full path')
     @patch('os.path.expandvars', return_value='expanded')
-    @patch('pathlib.Path.home', return_value='home')
-    def test_get_credential_file_path_windows(self, mock_home, mock_expand, mock_join):
+    def test_get_credential_file_path_windows(self, mock_expand, mock_join):
         os.name = 'nt'
         self.assertEqual(self.credentials.get_credential_file_path(), 'full path')
         mock_expand.assert_called_once_with('%LOCALAPPDATA%')
         mock_join.assert_called_once_with('expanded', 'dragonchain', 'credentials')
-        mock_home.assert_not_called()
 
     @patch('os.path.join', return_value='full path')
     @patch('os.path.expandvars', return_value='expanded')
