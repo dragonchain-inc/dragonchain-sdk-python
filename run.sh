@@ -50,7 +50,7 @@ elif [ "$1" = "docs" ]; then
 elif [ "$1" = "install" ]; then
     python3 setup.py install
 elif [ "$1" = "install-req" ]; then
-    python3 -m pip install -r requirements.txt --user
+    python3 -m pip install -r requirements.txt
 elif [ "$1" = "build-dist" ]; then
     python3 setup.py sdist bdist_wheel
 elif [ "$1" = "clean" ]; then

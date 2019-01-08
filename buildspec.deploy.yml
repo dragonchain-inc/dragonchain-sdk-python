@@ -3,10 +3,13 @@ version: 0.2
 phases:
   install:
     commands:
-      - ./run.sh install-req
+      - sudo ./run.sh install-req
   build:
     commands:
       - ./run.sh full-build
+      - export VERSION="$(python3 setup.py -V)"
+      - export TWINE_USERNAME="dragonchain"
+      - export TWINE_PASSWORD="$(aws secretsmanager get-secret-value --secret-id pypi/dragonchain/password --query 'SecretString' --output text)"
       - ./run.sh dist-release
       - aws s3 rm --recursive s3://dragonchain-sdk-python-docs/latest/*
       - aws s3 cp --recursive ./docs/.build/html s3://dragonchain-sdk-python-docs/latest
