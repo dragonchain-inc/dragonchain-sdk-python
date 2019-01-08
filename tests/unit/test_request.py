@@ -129,10 +129,14 @@ class TestRequestsMethods(TestCase):
         self.assertEqual(self.request.generate_query_string({}), '')
 
     def test_generate_query_string(self):
-        self.assertEqual(self.request.generate_query_string({
+        query = self.request.generate_query_string({
             'key1': 'val1',
             'key2': 'val2'
-        }), '?key1=val1&key2=val2')
+        })
+        self.assertEqual(query[0], '?')
+        self.assertTrue('key1=val1' in query)
+        self.assertTrue('key2=val2' in query)
+        self.assertEqual(query.count('&'), 1)
 
     def test_get_lucene_query_params_raises_type_error(self):
         self.assertRaises(TypeError, self.request.get_lucene_query_params, query=[])
