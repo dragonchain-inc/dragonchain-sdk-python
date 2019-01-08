@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - sudo ./run.sh install-req
+      - python3 -m pip install -r requirements.txt --user
   build:
     commands:
       - ./run.sh full-build
