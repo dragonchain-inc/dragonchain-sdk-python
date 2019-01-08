@@ -1,7 +1,4 @@
 language: python
-branches:
-  only:
-  - master
 env:
   global:
     CC_TEST_REPORTER_ID=448703f092c4869cc5645ae1c658e8536b8a746fbd0e0cdb91a963045d0714ed
