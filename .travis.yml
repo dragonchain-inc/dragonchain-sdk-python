@@ -5,12 +5,16 @@ branches:
 env:
   global:
     CC_TEST_REPORTER_ID=448703f092c4869cc5645ae1c658e8536b8a746fbd0e0cdb91a963045d0714ed
-python:
-  - 3.3
-  - 3.4
-  - 3.5
-  - 3.6
-  - 3.7
+matrix:
+  include:
+    - python: 3.4
+      dist: trusty
+    - python: 3.5
+      dist: trusty
+    - python: 3.6
+      dist: trusty
+    - python: 3.7
+      dist: xenial
 install:
   - python3 -m pip install -r requirements.txt
 before_script:
@@ -20,4 +24,4 @@ before_script:
 script:
   - ./run.sh full-build
 after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi

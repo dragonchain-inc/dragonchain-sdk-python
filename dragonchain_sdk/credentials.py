@@ -13,6 +13,7 @@ import configparser
 import hashlib
 import hmac
 import os
+import sys
 import pathlib
 import base64
 import logging
@@ -137,14 +138,14 @@ class Credentials(object):
         Returns
             Hash method
         """
-        if algorithm == 'BLAKE2b512':
-            return hashlib.blake2b
-        elif algorithm == 'SHA256':
+        if algorithm == 'SHA256':
             return hashlib.sha256
-        elif algorithm == 'SHA3-256':
-            return hashlib.sha3_256
-        else:
-            raise NotImplementedError('{} is not a support hash algorithm.'.format(algorithm))
+        if sys.version_info >= (3, 6):
+            if algorithm == 'BLAKE2b512':
+                return hashlib.blake2b
+            elif algorithm == 'SHA3-256':
+                return hashlib.sha3_256
+        raise NotImplementedError('{} is not a supported hash algorithm.'.format(algorithm))
 
     def bytes_to_b64_str(self, unencoded_bytes):
         """Take a bytes object and output a base64 python string
