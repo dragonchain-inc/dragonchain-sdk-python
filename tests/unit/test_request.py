@@ -149,8 +149,8 @@ class TestRequestsMethods(TestCase):
         self.assertEqual(query[0], '?')
         self.assertTrue('offset=0' in query)
         self.assertTrue('limit=100' in query)
-        self.assertTrue('q=test:"val"' in query)
-        self.assertTrue('sort=test:desc' in query)
+        self.assertTrue('q=test%3A%22val%22' in query)
+        self.assertTrue('sort=test%3Adesc' in query)
         self.assertEqual(query.count('&'), 3)
 
     def test_get_lucene_query_params_no_query(self):
@@ -158,7 +158,7 @@ class TestRequestsMethods(TestCase):
         self.assertEqual(query[0], '?')
         self.assertTrue('offset=0' in query)
         self.assertTrue('limit=100' in query)
-        self.assertTrue('sort=test:desc' in query)
+        self.assertTrue('sort=test%3Adesc' in query)
         self.assertEqual(query.count('&'), 2)
 
     def test_get_lucene_query_params_no_sort(self):
@@ -166,7 +166,7 @@ class TestRequestsMethods(TestCase):
         self.assertEqual(query[0], '?')
         self.assertTrue('offset=0' in query)
         self.assertTrue('limit=100' in query)
-        self.assertTrue('q=test:"val"' in query)
+        self.assertTrue('q=test%3A%22val%22' in query)
         self.assertEqual(query.count('&'), 2)
 
     def test_make_headers(self):

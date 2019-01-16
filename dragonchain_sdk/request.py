@@ -12,6 +12,7 @@
 import datetime
 import requests
 import logging
+import urllib
 from json import dumps
 from dragonchain_sdk.credentials import Credentials
 from dragonchain_sdk import exceptions
@@ -148,12 +149,10 @@ class Request(object):
         if not isinstance(query_dict, dict):
             raise TypeError('Parameter "query_dict" must be of type dict.')
         if query_dict:
-            query_string = '?'
-            for key, value in query_dict.items():
-                query_string += '{}={}&'.format(key, value)
-            query_string = query_string.rstrip('&')
+            query = '?'
+            query_string = urllib.parse.urlencode(query_dict)
             logger.debug('Generated query string {}'.format(query_string))
-            return query_string
+            return '{}{}'.format(query, query_string)
         else:
             # If input is empty, return an empty string as the query string
             return ''
