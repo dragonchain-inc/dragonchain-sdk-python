@@ -84,6 +84,17 @@ class TestRequestsMethods(TestCase):
             parse_response=True
         )
 
+    @patch('dragonchain_sdk.request.Request._make_request', return_value='response')
+    def test_delete_calls_make_request(self, mock_request):
+        self.assertEqual(self.request.delete('/test', {'body': 'hello world'}), 'response')
+        mock_request.assert_called_once_with(
+            http_verb='DELETE',
+            path='/test',
+            verify=True,
+            json={'body': 'hello world'},
+            parse_response=True
+        )
+
     def test_get_request_method_raises_type_error(self):
         self.assertRaises(TypeError, self.request.get_requests_method, [])
         self.assertRaises(TypeError, self.request.get_requests_method, {})

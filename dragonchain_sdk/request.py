@@ -121,6 +121,23 @@ class Request(object):
                                   json=body,
                                   parse_response=parse_response)
 
+    def delete(self, path, body, parsed_response=True):
+        """Make a DELETE request to the chain
+
+        Args:
+            path (str): Path of the request (including any path query parameters)
+            body (dict): A dictionary representing the JSON to put.
+            parse_response (bool, optional): Decides whether the return from the chain should be parsed as json (default True)
+
+        Returns:
+            Returns the response of the DELETE operation
+        """
+        return self._make_request(http_verb='DELETE',
+                                  path=path,
+                                  verify=self.verify,
+                                  json=body,
+                                  parse_response=parsed_response)
+
     def get_requests_method(self, http_verb):
         """Get the appropriate requests method for a given http_verb
 

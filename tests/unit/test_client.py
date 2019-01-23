@@ -591,3 +591,52 @@ class TestClientMehods(TestCase):
         self.client = Client()
         self.client.list_sc_heap(sc_name='MyContract')
         self.client.request.get.assert_called_once_with('/list/MyContract/')
+
+    def test_register_transaction_type_calls_post(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.register_transaction_type('MyNewType')
+        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType", "custom_indexes": []})
+
+    def test_register_transaction_type_raises_error_type_is_not_string(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.register_transaction_type, {})
+
+    def test_register_transaction_type_raises_error_indexes_not_array(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.register_transaction_type, 'myType', {})
+
+    def test_update_transaction_type_calls_put(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_transaction_type('MyCurrentType')
+        self.client.request.put.assert_called_once_with('/transaction-type/MyCurrentType', {"version": "1", "custom_indexes": []})
+
+    def test_update_transaction_type_raises_error_with_invalid_txn_type(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.update_transaction_type, {})
+
+    def test_update_transaction_type_raises_error_with_invalid_indexes(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.update_transaction_type, 'myType', {})
+
+    def test_delete_transaction_type_calls_delete(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.delete_transaction_type('MyCurrentType')
+        self.client.request.delete.assert_called_once_with('/transaction-type/MyCurrentType')
+
+    def test_delete_transaction_type_raises_error_type_not_string(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.delete_transaction_type, {})
+
+    def test_get_transaction_type_raises_type_error(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.get_transaction_type, {})
+
+    def test_get_transaction_type_succeeds(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.get_transaction_type('myType')
+        self.client.request.get.assert_called_once_with('/transaction-type/myType')
+
+    def test_list_transaction_types_succeeds(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.list_transaction_types()
+        self.client.request.get.assert_called_once_with('/transaction-types')

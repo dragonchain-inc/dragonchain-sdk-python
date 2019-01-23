@@ -446,6 +446,78 @@ class Client(object):
             return self.request.get('/list/{}/{}/'.format(sc_name, folder))
         return self.request.get('/list/{}/'.format(sc_name))
 
+    def get_transaction_type(self, transaction_type):
+        """Gets information on a registered transaction type
+
+        Args:
+            transaction_type (str): transaction_type to retrieve data for
+
+        Returns:
+            parsed json response of the transaction type or None
+        """
+        if not isinstance(transaction_type, str):
+            raise TypeError('Parameter "transaction_type" must be of type str.')
+        return self.request.get('/transaction-type/{}'.format(transaction_type))
+
+    def list_transaction_types(self):
+        """Lists out all registered transaction types for a chain
+
+        Returns:
+            list of registered transaction types
+        """
+        return self.request.get('/transaction-types')
+
+    def update_transaction_type(self, transaction_type, custom_indexes=None):
+        """Updates the custom index of a given registered transaction type
+
+        Args:
+            transaction_type (str): transaction_type to update
+            custom_indexes (list): custom_indexes to update
+
+        Returns:
+            Parsed json with success message
+        """
+        if custom_indexes is None:
+            custom_indexes = []
+        if not isinstance(transaction_type, str):
+            raise TypeError('Parameter "transaction_type" must be of type str.')
+        if not isinstance(custom_indexes, list):
+            raise TypeError('Parameter "custom_indexes" must be of type list.')
+        params = {"version": "1", "custom_indexes": custom_indexes}
+        return self.request.put('/transaction-type/{}'.format(transaction_type), params)
+
+    def register_transaction_type(self, transaction_type, custom_indexes=None):
+        """Registers a new custom index
+
+        Args:
+            transaction_type (str): transaction_type to update
+            custom_indexes (list): custom_indexes to update
+
+        Returns:
+            Parsed json with success message
+        """
+        if custom_indexes is None:
+            custom_indexes = []
+        if not isinstance(transaction_type, str):
+            raise TypeError('Parameter "transaction_type" must be of type str.')
+        if not isinstance(custom_indexes, list):
+            raise TypeError('Parameter "custom_indexes" must be of type list.')
+        params = {"version": "1", "txn_type": transaction_type, "custom_indexes": custom_indexes}
+        return self.request.post('/transaction-type', params)
+
+    def delete_transaction_type(self, transaction_type):
+        """Deletes a transaction type registration
+
+        Args:
+            transaction_type (str): transaction_type to delete
+
+        Returns:
+            Parsed json with success message
+        """
+        if not isinstance(transaction_type, str):
+            raise TypeError('Parameter "transaction_type" must be of type str.')
+        return self.request.delete('/transaction-type/{}'.format(transaction_type))
+
     @staticmethod
     def check_valid_library_contract(contract):
         if contract not in [
