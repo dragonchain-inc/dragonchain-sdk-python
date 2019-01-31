@@ -13,7 +13,7 @@ from dragonchain_sdk.dragonchain_client import Client
 import logging
 
 __author__ = 'Dragonchain'
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 
 def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string=None):

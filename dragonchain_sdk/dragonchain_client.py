@@ -496,13 +496,13 @@ class Client(object):
         Returns:
             Parsed json with success message
         """
-        if custom_indexes is None:
-            custom_indexes = []
         if not isinstance(transaction_type, str):
             raise TypeError('Parameter "transaction_type" must be of type str.')
-        if not isinstance(custom_indexes, list):
+        if custom_indexes and not isinstance(custom_indexes, list):
             raise TypeError('Parameter "custom_indexes" must be of type list.')
-        params = {"version": "1", "txn_type": transaction_type, "custom_indexes": custom_indexes}
+        params = {"version": "1", "txn_type": transaction_type}
+        if custom_indexes:
+            params['custom_indexes'] = custom_indexes
         return self.request.post('/transaction-type', params)
 
     def delete_transaction_type(self, transaction_type):

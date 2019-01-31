@@ -595,7 +595,13 @@ class TestClientMehods(TestCase):
     def test_register_transaction_type_calls_post(self, mock_creds, mock_request):
         self.client = Client()
         self.client.register_transaction_type('MyNewType')
-        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType", "custom_indexes": []})
+        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType"})
+
+    def test_register_transaction_type_calls_post_with_custom_indexes(self, mock_creds, mock_request):
+        custom_indexes = [{"key": "name", "path": "body.name"}]
+        self.client = Client()
+        self.client.register_transaction_type('MyNewType', custom_indexes)
+        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType", "custom_indexes": custom_indexes})
 
     def test_register_transaction_type_raises_error_type_is_not_string(self, mock_creds, mock_request):
         self.client = Client()
@@ -603,7 +609,7 @@ class TestClientMehods(TestCase):
 
     def test_register_transaction_type_raises_error_indexes_not_array(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.register_transaction_type, 'myType', {})
+        self.assertRaises(TypeError, self.client.register_transaction_type, 'myType', 'notaobject')
 
     def test_update_transaction_type_calls_put(self, mock_creds, mock_request):
         self.client = Client()
