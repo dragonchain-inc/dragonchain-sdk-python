@@ -180,15 +180,16 @@ class Client(object):
             body['custom_environment_variables'] = env_vars
         return self.request.post('/contract/{}'.format(name), body)
 
-    def post_custom_contract(self, name, code, runtime, sc_type, serial, env_vars=None):
+    def post_custom_contract(self, name, code, runtime, handler, sc_type, serial, env_vars=None):
         """Post a contract to a chain
 
         Args:
             name (str): Name (txn_type) of the contract to create
             code (str): Base 64 encoded zip file containing the contract code
             runtime (str): The runtime for the contract
+            handler (str): The name of the entrypoint for the smart contract (file.method) i.e. 'handler.main'
             sc_type (str): cron or transaction
-            serial (str): If false, the contract will be executed in parallel. Otherwise, it will execute in a queue
+            serial (bool): If false, the contract will be executed in parallel. Otherwise, it will execute in a queue
             env_vars (dict, optional): Environment variables to set for the smart contract
 
         Returns:
@@ -200,6 +201,8 @@ class Client(object):
             raise TypeError('Parameter "code" must be of type str.')
         if not isinstance(runtime, str):
             raise TypeError('Parameter "runtime" must be of type str.')
+        if not isinstance(handler, str):
+            raise TypeError('Parameter "handler" must be of type str.')
         if not isinstance(sc_type, str):
             raise TypeError('Parameter "sc_type" must be of type str.')
         if not isinstance(serial, bool):
@@ -216,7 +219,8 @@ class Client(object):
             'code': code,
             'runtime': runtime,
             'sc_type': sc_type,
-            'is_serial': serial
+            'is_serial': serial,
+            'handler': handler
         }
         if env_vars:
             body['custom_environment_variables'] = env_vars
