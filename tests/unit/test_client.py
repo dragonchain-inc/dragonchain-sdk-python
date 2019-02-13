@@ -262,16 +262,17 @@ class TestClientMehods(TestCase):
 
     def test_post_custom_contract_raises_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.post_custom_contract, [], 'MyCode', 'python3.6', 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', [], 'python3.6', 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', [], 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', [], True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'transaction', [])
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'transaction', True, env_vars=[])
+        self.assertRaises(TypeError, self.client.post_custom_contract, [], 'MyCode', 'python3.6', 'handler', 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', [], 'python3.6', 'handler', 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', [], 'handler', 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', [], 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', [], True)
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', 'transaction', [])
+        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', 'transaction', True, env_vars=[])
 
     def test_post_custom_contract_calls_post(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'transaction', True, env_vars={'test': 'env'})
+        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'handler', 'transaction', True, env_vars={'test': 'env'})
         self.client.request.post.assert_called_once_with('/contract/Name', {
             'version': '2',
             'origin': 'custom',
@@ -280,12 +281,13 @@ class TestClientMehods(TestCase):
             'runtime': 'python3.6',
             'sc_type': 'transaction',
             'is_serial': True,
+            'handler': 'handler',
             'custom_environment_variables': {'test': 'env'}
         })
 
     def test_post_custom_contract_calls_post_no_env(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'transaction', True)
+        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'handler', 'transaction', True)
         self.client.request.post.assert_called_once_with('/contract/Name', {
             'version': '2',
             'origin': 'custom',
@@ -293,7 +295,8 @@ class TestClientMehods(TestCase):
             'code': 'MyCode',
             'runtime': 'python3.6',
             'sc_type': 'transaction',
-            'is_serial': True
+            'is_serial': True,
+            'handler': 'handler'
         })
 
     def test_post_library_contract_raises_type_error(self, mock_creds, mock_request):
