@@ -180,57 +180,6 @@ class TestClientMehods(TestCase):
         mock_creds.assert_not_called()
         mock_request.assert_not_called()
 
-    def test_update_matchmaking_config_raises_type_error(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, asking_price='1234')
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, asking_price=[])
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, asking_price={})
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, broadcast_interval='1234')
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, broadcast_interval=[])
-        self.assertRaises(TypeError, self.client.update_matchmaking_config, broadcast_interval={})
-
-    def test_update_matchmaking_config_raises_runtime_error(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(exceptions.EmptyUpdateException, self.client.update_matchmaking_config)
-
-    def test_update_matchmaking_config_asking_price_calls_put(self, mock_creds, mock_request):
-        self.client = Client()
-        self.client.update_matchmaking_config(asking_price=1)
-        self.client.request.put.assert_called_once_with('/update-matchmaking-data', {
-            'matchmaking': {
-                'askingPrice': 1
-            }
-        })
-
-    def test_update_matchmaking_config_broadcast_interval_calls_put(self, mock_creds, mock_request):
-        self.client = Client()
-        self.client.update_matchmaking_config(broadcast_interval=4.2)
-        self.client.request.put.assert_called_once_with('/update-matchmaking-data', {
-            'matchmaking': {
-                'broadcastInterval': 4.2
-            }
-        })
-
-    def test_update_dragonnet_config(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(TypeError, self.client.update_dragonnet_config, maximum_price=[])
-        self.assertRaises(TypeError, self.client.update_dragonnet_config, maximum_price=1234)
-        self.assertRaises(TypeError, self.client.update_dragonnet_config, maximum_price='1234')
-        self.assertRaises(TypeError, self.client.update_dragonnet_config, maximum_price={'l2': 'NaN'})
-
-    def test_update_dragonnet_config_raises_runtime_error(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(exceptions.EmptyUpdateException, self.client.update_dragonnet_config, maximum_price={})
-
-    def test_update_dragonnet_config_maximum_prices_calls_put(self, mock_creds, mock_request):
-        self.client = Client()
-        self.client.update_dragonnet_config(maximum_price={
-            'l2': 1
-        })
-        self.client.request.put.assert_called_once_with('/update-matchmaking-data', {
-            'dragonnet': {'l2': {'maximumPrice': 1}}
-        })
-
     def test_get_status_calls_get(self, mock_creds, mock_request):
         self.client = Client()
         self.client.get_status()

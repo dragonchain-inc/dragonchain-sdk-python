@@ -77,52 +77,6 @@ class Client(object):
         """
         return self.request.get('/status')
 
-    def update_matchmaking_config(self, asking_price=None, broadcast_interval=None):
-        """Update the asking price for a chain, and/or the broadcast interval for an L5
-        Note: While either parameter is optional, at least one must be specified
-
-        Args:
-            asking_price (number, optional): asking price to set for the chain verifications (in DRGNs) (l2-5 ONLY)
-            broadcast_interval (number, optional): the broadcast interval for an l5 node
-        """
-        request_data = {}
-        request_data['matchmaking'] = {}
-
-        if asking_price is not None and not isinstance(asking_price, (int, float)):
-            raise TypeError('Parameter "asking_price" must be of type number.')
-        if asking_price:
-            request_data['matchmaking']['askingPrice'] = asking_price
-        if broadcast_interval is not None and not isinstance(broadcast_interval, (int, float)):
-            raise TypeError('Parameter "asking_price" must be of type number.')
-        if broadcast_interval:
-            request_data['matchmaking']['broadcastInterval'] = broadcast_interval
-        if not request_data['matchmaking']:
-            raise exceptions.EmptyUpdateException('No valid parameters were provided')
-
-        return self.request.put('/update-matchmaking-data', request_data)
-
-    def update_dragonnet_config(self, maximum_price):
-        """Update the maximum price metadata for an L1 chain
-
-        Args:
-            maximum_price (dict): maximum prices to set for each level (in DRGNs) (L1's only) with the following schema: ``{'l2': number, 'l3': number, 'l4': number, 'l5': number}``
-            Note: Not all levels have to be provided. A selection can be used (e.g. ``{'l4': 4.9}`` is valid)
-        """
-        request_data = {}
-        if not isinstance(maximum_price, dict):
-            raise TypeError('Parameter "maximum_price" must be of type dict.')
-        request_data['dragonnet'] = {}
-        for i in range(2, 6):
-            temp = maximum_price.get('l{}'.format(i))
-            if temp is not None and not isinstance(temp, (int, float)):
-                raise TypeError('Parameter "maximum_price.l{}" must be of type number.'.format(i))
-            if temp:
-                request_data['dragonnet']['l{}'.format(i)] = {'maximumPrice': temp}
-        if not request_data['dragonnet']:
-            raise exceptions.EmptyUpdateException('No valid parameters were provided')
-
-        return self.request.put('/update-matchmaking-data', request_data)
-
     def query_contracts(self, query=None, sort=None, offset=0, limit=10):
         """Perform a query on a chain's smart contracts
 
