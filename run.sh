@@ -59,7 +59,8 @@ elif [ "$1" = "full-build" ]; then
     set +e
     echo "\nChecking for linting errors\n"
     sh run.sh linter
-    [ $? -ne 0 ] && echo "\nChecking for static security analysis issues\n" && exit 1
+    [ $? -ne 0 ] && echo "\n!!! Linting Failure !!!" && exit 1
+    echo "\nChecking for static security analysis issues\n"
     sh run.sh bandit
     [ $? -ne 0 ] && echo "\n!!! Bandit (Security) Failure !!!" && exit 1
     echo "\nChecking that docs can build\n"

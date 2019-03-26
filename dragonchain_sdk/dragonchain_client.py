@@ -13,7 +13,6 @@ import os
 import logging
 from dragonchain_sdk.request import Request
 from dragonchain_sdk.credentials import Credentials
-from dragonchain_sdk import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +68,21 @@ class Client(object):
 
         logger.info('Credentials updated')
 
+    def get_secret(self, secret_name):
+        """Gets secrets for smart contracts
+
+        Args:
+            secret_name (str): name of the secret to retrieve
+        Returns:
+            Returns the secret from the file location
+        """
+        if not isinstance(secret_name, str):
+            raise TypeError('Parameter "secret_name" must be of type str.')
+        if not os.environ.get('SMART_CONTRACT_ID'):
+            raise RuntimeError('Missing "SMART_CONTRACT_ID" from environment')
+        path = os.path.join(os.path.abspath(os.sep), 'var', 'openfaas', 'secrets', 'sc-{}-{}'.format(os.environ.get('SMART_CONTRACT_ID'), secret_name))
+        return open(path, 'r').read()
+
     def get_status(self):
         """Make a PUT request to a chain
 
@@ -92,146 +106,169 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(query, sort, offset, limit)
         return self.request.get('/contract{}'.format(query_params))
 
-    def get_contract(self, name):
+    def get_contract(self, contract_id=None, txn_type=None):
         """Perform a query on a chain's smart contracts
 
         Args:
-            name (str): Name of the contract to get
+            contract_id (str, exclusive): Id of the contract to get
+            txn_type (str, exclusive): Name of the contract to get
 
         Returns:
-            The contract searched for
+            The contract returned from the request
         """
-        if not isinstance(name, str):
-            raise TypeError('Parameter "name" must be of type str.')
-        return self.request.get('/contract/{}'.format(name))
+        if contract_id is not None and not isinstance(contract_id, str):
+            raise TypeError('Parameter "contract_id" must be of type str.')
+        if txn_type is not None and not isinstance(txn_type, str):
+            raise TypeError('Parameter "txn_type" must be of type str.')
+        if contract_id and txn_type:
+            raise TypeError('Only one of "contract_id" and "txn_type" can be specified')
+        if contract_id:
+            return self.request.get('/contract/{}'.format(contract_id))
+        elif txn_type:
+            return self.request.get('/contract/txn_type/{}'.format(txn_type))
+        else:
+            raise TypeError('At least one of "contract_id" or "txn_type" must be specified')
 
-    def post_library_contract(self, name, library_name, env_vars=None):
-        """Post a library contract to a chain
-
-        Args:
-            name (str): Name (txn_type) of the contract to create
-            library_name (str): The type of contract to be created from the library
-            env_vars (dict, optional): Environment variables to set for the smart contract
-
-        Returns:
-            Success or failure object
-        """
-        if not isinstance(name, str):
-            raise TypeError('Parameter "name" must be of type str.')
-        if not isinstance(library_name, str):
-            raise TypeError('Parameter "library_name" must be of type str.')
-        if env_vars is not None and not isinstance(env_vars, dict):
-            raise TypeError('Parameter "env_vars" must be of type dict.')
-        self.check_valid_library_contract(library_name)
-
-        body = {
-            'version': '2',
-            'origin': 'library',
-            'name': name,
-            'libraryContractName': library_name
-        }
-        if env_vars:
-            body['custom_environment_variables'] = env_vars
-        return self.request.post('/contract/{}'.format(name), body)
-
-    def post_custom_contract(self, name, code, runtime, handler, sc_type, serial, env_vars=None):
+    def post_contract(self, txn_type, execution_order, image, cmd, args=None, env=None, secrets=None, seconds=None, cron=None, auth=None):
         """Post a contract to a chain
 
         Args:
-            name (str): Name (txn_type) of the contract to create
-            code (str): Base 64 encoded zip file containing the contract code
-            runtime (str): The runtime for the contract
-            handler (str): The name of the entrypoint for the smart contract (file.method) i.e. 'handler.main'
-            sc_type (str): cron or transaction
-            serial (bool): If false, the contract will be executed in parallel. Otherwise, it will execute in a queue
-            env_vars (dict, optional): Environment variables to set for the smart contract
+            txn_type (str): txn_type of the contract to create
+            execution_order (string): Order of execution. Valid values are 'serial' or 'parallel'
+            image (str): Docker image containing the smart contract logic
+            cmd (str): Entrypoint command to run in the docker container
+            args (list, optional): List of arguments to the cmd field
+            env (dict, optional): dict mapping of environment variables for your contract runtime
+            secrets (dict, optional): dict mapping of secrets for your contract runtime
+            seconds (string, optional): The seconds of scheduled execution in seconds
+            cron (string, optional): The rate of scheduled execution specified as a cron
+            auth (string, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
         Returns:
             Success or failure object
         """
-        if not isinstance(name, str):
-            raise TypeError('Parameter "name" must be of type str.')
-        if not isinstance(code, str):
-            raise TypeError('Parameter "code" must be of type str.')
-        if not isinstance(runtime, str):
-            raise TypeError('Parameter "runtime" must be of type str.')
-        if not isinstance(handler, str):
-            raise TypeError('Parameter "handler" must be of type str.')
-        if not isinstance(sc_type, str):
-            raise TypeError('Parameter "sc_type" must be of type str.')
-        if not isinstance(serial, bool):
-            raise TypeError('Parameter "serial" must be of type bool.')
-        if env_vars is not None and not isinstance(env_vars, dict):
-            raise TypeError('Parameter "env_vars" must be of type dict.')
-        self.check_runtime(runtime)
-        self.check_sc_type(sc_type)
+        if not isinstance(txn_type, str):
+            raise TypeError('Parameter "txn_type" must be of type str.')
+        if not isinstance(image, str):
+            raise TypeError('Parameter "image" must be of type str.')
+        if not isinstance(cmd, str):
+            raise TypeError('Parameter "cmd" must be of type str.')
+        if not isinstance(execution_order, str):
+            raise TypeError('Parameter "execution_order" must be of type str.')
+        if args is not None and not isinstance(args, list):
+            raise TypeError('Parameter "args" must be of type list.')
+        if env is not None and not isinstance(env, dict):
+            raise TypeError('Parameter "env" must be of type dict.')
+        if secrets is not None and not isinstance(secrets, dict):
+            raise TypeError('Parameter "secrets" must be of type dict.')
+        if seconds is not None and not isinstance(seconds, int):
+            raise TypeError('Parameter "seconds" must be of type int.')
+        if cron is not None and not isinstance(cron, str):
+            raise TypeError('Parameter "cron" must be of type str.')
+        if auth is not None and not isinstance(auth, str):
+            raise TypeError('Parameter "auth" must be of type str.')
 
         body = {
-            'version': '2',
-            'origin': 'custom',
-            'name': name,
-            'code': code,
-            'runtime': runtime,
-            'sc_type': sc_type,
-            'is_serial': serial,
-            'handler': handler
+            'version': '3',
+            'txn_type': txn_type,
+            'image': image,
+            'cmd': cmd,
+            'execution_order': execution_order
         }
-        if env_vars:
-            body['custom_environment_variables'] = env_vars
-        return self.request.post('/contract/{}'.format(name), body)
+        if env:
+            body['env'] = env
+        if args:
+            body['args'] = args
+        if secrets:
+            body['secrets'] = secrets
+        if seconds:
+            body['seconds'] = seconds
+        if cron:
+            body['cron'] = cron
+        if auth:
+            body['auth'] = auth
+        return self.request.post('/contract', body)
 
-    def update_contract(self, name=None, status=None, sc_type=None, code=None, runtime=None, serial=None, env_vars=None):
-        """Update an existing smart contract. The name and at least one optional parameter must be supplied.
+    def update_contract(self, contract_id, execution_order=None, image=None, cmd=None, args=None, desired_state=None, env={}, secrets={}, seconds=None, cron=None, auth=None):
+        """Update an existing smart contract. The contract_id and at least one optional parameter must be supplied.
 
         Args:
-            name (str): The name of the contract to update
-            status (str, optional): The status of the contract. Valid values are ``disabled`` and ``enabled``
-            sc_type (str, optional): cron or transaction (immutable on library contracts)
-            code (str, optional): The base 64 encoded zip file. (immutable on library contracts)
-            runtime (str, optional): The runtime for the contract (immutable on library contracts)
-            serial (str, optional): If false, the contract will be executed in parallel. Otherwise, it will execute in a queue (immutable on library contracts)
-            env_vars (dict, optional): Environment variables to set for the smart contract (immutable on library contracts)
+            contract_id (str): contract_id of the contract to create
+            execution_order (string): Order of execution. Valid values are 'serial' or 'parallel'
+            image (str): Docker image containing the smart contract logic
+            cmd (str): Entrypoint command to run in the docker container
+            args (list, optional): List of arguments to the cmd field
+            desired_state (str, optional): Change the state of a contract. Valid values are "active" and "inactive". You may only change the state of an active or inactive contract.
+            env (dict, optional): dict mapping of environment variables for your contract runtime
+            secrets (dict, optional): dict mapping of secrets for your contract runtime
+            seconds (int, optional): The seconds of scheduled execution in seconds
+            cron (string, optional): The rate of scheduled execution specified as a cron
+            auth (string, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
         Returns:
             Success or failure object
         """
-        if name is None:
-            raise ValueError('Parameter "name" must be be defined.')
-        if name is not None and not isinstance(name, str):
-            raise TypeError('Parameter "name" must be of type str.')
-        if status is not None and not isinstance(status, str):
-            raise TypeError('Parameter "status" must be of type str.')
-        if sc_type is not None and not isinstance(sc_type, str):
-            raise TypeError('Parameter "sc_type" must be of type str.')
-        if code is not None and not isinstance(code, str):
-            raise TypeError('Parameter "code" must be of type str.')
-        if runtime is not None and not isinstance(runtime, str):
-            raise TypeError('Parameter "runtime" must be of type str.')
-        if serial is not None and not isinstance(serial, bool):
-            raise TypeError('Parameter "serial" must be of type bool.')
-        if env_vars is not None and not isinstance(env_vars, dict):
-            raise TypeError('Parameter "env_vars" must be of type dict.')
+        if not isinstance(contract_id, str):
+            raise TypeError('Parameter "contract_id" must be of type str.')
+        if image is not None and not isinstance(image, str):
+            raise TypeError('Parameter "image" must be of type str.')
+        if cmd is not None and not isinstance(cmd, str):
+            raise TypeError('Parameter "cmd" must be of type str.')
+        if execution_order is not None and not isinstance(execution_order, str):
+            raise TypeError('Parameter "execution_order" must be of type str.')
+        if desired_state is not None and not isinstance(desired_state, str):
+            raise TypeError('Parameter "desired_state" must be of type str.')
+        if args is not None and not isinstance(args, list):
+            raise TypeError('Parameter "args" must be of type list.')
+        if env is not None and not isinstance(env, dict):
+            raise TypeError('Parameter "env" must be of type dict.')
+        if secrets is not None and not isinstance(secrets, dict):
+            raise TypeError('Parameter "secrets" must be of type dict.')
+        if seconds is not None and not isinstance(seconds, int):
+            raise TypeError('Parameter "seconds" must be of type int.')
+        if cron is not None and not isinstance(cron, str):
+            raise TypeError('Parameter "cron" must be of type str.')
+        if auth is not None and not isinstance(auth, str):
+            raise TypeError('Parameter "auth" must be of type str.')
 
-        body = {}
-        if status is not None:
-            body['status'] = status
-        if sc_type is not None:
-            self.check_sc_type(sc_type)
-            body['sc_type'] = sc_type
-        if code is not None:
-            body['code'] = code
-        if runtime is not None:
-            self.check_runtime(runtime)
-            body['runtime'] = runtime
-        if serial is not None:
-            body['serial'] = serial
-        if env_vars is not None:
-            body['custom_environment_variables'] = env_vars
+        body = {
+            'version': '3'
+        }
+        if image:
+            body['image'] = image
+        if cmd:
+            body['cmd'] = cmd
+        if execution_order:
+            body['execution_order'] = execution_order
+        if desired_state:
+            body['desired_state'] = desired_state
+        if args:
+            body['args'] = args
+        if env:
+            body['env'] = env
+        if secrets:
+            body['secrets'] = secrets
+        if seconds:
+            body['seconds'] = seconds
+        if cron:
+            body['cron'] = cron
+        if auth:
+            body['auth'] = auth
 
-        if not body:
-            raise exceptions.EmptyUpdateException('No valid parameters were provided')
+        return self.request.put('/contract/{}'.format(contract_id), body)
 
-        return self.request.put('/contract/{}'.format(name), body)
+    def delete_contract(self, contract_id):
+        """Delete an existing contract
+
+        Args:
+            contract_id (str): Transaction type of the contract to delete
+
+        Returns:
+            The results of the delete request
+        """
+        if not isinstance(contract_id, str):
+            raise TypeError('Parameter "state" must be of type str.')
+        return self.request.delete('/contract/{}'.format(contract_id), body={})
 
     def query_transactions(self, query=None, sort=None, offset=0, limit=10):
         """Perform a query on a chain's transactions
@@ -474,53 +511,4 @@ class Client(object):
         """
         if not isinstance(transaction_type, str):
             raise TypeError('Parameter "transaction_type" must be of type str.')
-        return self.request.delete('/transaction-type/{}'.format(transaction_type))
-
-    @staticmethod
-    def check_valid_library_contract(contract):
-        if contract not in [
-            'currency',
-            'interchainWatcher',
-            'neoWatcher',
-            'btcWatcher',
-            'ethereumPublisher',
-            'neoPublisher',
-            'btcPublisher'
-        ]:
-            raise ValueError('Parameter "library_contract" not found in list of valid contracts.')
-
-    @staticmethod
-    def check_runtime(runtime):
-        """Checks if a runtime string is valid
-
-        Args:
-            runtime (str): runtime to validate
-
-        Returns:
-            True if valid, False if invalid
-        """
-        if runtime not in [
-            'nodejs6.10',
-            'nodejs8.10',
-            'java8',
-            'python2.7',
-            'python3.6',
-            'dotnetcore1.0',
-            'dotnetcore2.0',
-            'dotnetcore2.1',
-            'go1.x'
-        ]:
-            raise ValueError('Parameter "runtime" not found in valid runtime list.')
-
-    @staticmethod
-    def check_sc_type(sc_type):
-        """Checks if a smart contract type string is valid
-
-        Args:
-            sc_type (str): sc_type to validate
-
-        Raises:
-            ValueError if the type is invalid.
-        """
-        if sc_type not in ['transaction', 'cron']:
-            raise ValueError('Parameter "sc_type" not found in valid list.')
+        return self.request.delete('/transaction-type/{}'.format(transaction_type), body={})

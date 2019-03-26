@@ -45,18 +45,6 @@ class TestCredentialsInitialization(TestCase):
         self.assertEqual(credentials.auth_key_id, 'TestKeyId')
 
     @patch('dragonchain_sdk.credentials.configparser.ConfigParser')
-    def test_gets_credentials_from_config_file_raises_on_no_section(self, mock_configparser):
-        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
-        mock_configparser.return_value.get.side_effect = configparser.NoSectionError('test')
-        self.assertRaises(exceptions.AuthorizationNotFound, credentials.get_credentials)
-
-    @patch('dragonchain_sdk.credentials.configparser.ConfigParser')
-    def test_gets_credentials_from_config_file_raises_on_no_option(self, mock_configparser):
-        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
-        mock_configparser.return_value.get.side_effect = configparser.NoOptionError('test', 'test')
-        self.assertRaises(exceptions.AuthorizationNotFound, credentials.get_credentials)
-
-    @patch('dragonchain_sdk.credentials.configparser.ConfigParser')
     def test_gets_dragonchain_id_from_config_file_raises_on_no_section(self, mock_configparser):
         credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
         mock_configparser.return_value.get.side_effect = configparser.NoSectionError('test')
@@ -67,6 +55,45 @@ class TestCredentialsInitialization(TestCase):
         credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
         mock_configparser.return_value.get.side_effect = configparser.NoOptionError('test', 'test')
         self.assertRaises(exceptions.DragonchainIdentityNotFound, credentials.get_dragonchain_id)
+
+    @patch('dragonchain_sdk.credentials.configparser.ConfigParser')
+    def test_gets_credentials_from_config_file_returns_false_on_no_section(self, mock_configparser):
+        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
+        mock_configparser.return_value.get.side_effect = configparser.NoSectionError('test')
+        self.assertEqual(credentials.get_config_credentials(), False)
+
+    @patch('dragonchain_sdk.credentials.configparser.ConfigParser')
+    def test_gets_credentials_from_config_file_returns_false_on_no_option(self, mock_configparser):
+        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
+        mock_configparser.return_value.get.side_effect = configparser.NoOptionError('test', 'test')
+        self.assertEqual(credentials.get_config_credentials(), False)
+
+    @patch('dragonchain_sdk.credentials.open')
+    def test_gets_credentials_from_smart_contract(self, mock_open):
+        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
+        mock_open.return_value.return_value.read.return_value = 'bogusAuth'
+        self.assertEqual(credentials.get_smart_contract_credentials(), True)
+
+    @patch('dragonchain_sdk.credentials.open')
+    def test_gets_credentials_from_smart_contract_catches_filenotfound(self, mock_open):
+        credentials = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
+        mock_open.side_effect = FileNotFoundError()
+        self.assertEqual(credentials.get_smart_contract_credentials(), False)
+
+    @patch('dragonchain_sdk.credentials.Credentials.get_config_credentials', return_value=False)
+    @patch('dragonchain_sdk.credentials.Credentials.get_smart_contract_credentials')
+    def test_get_credentials_checks_for_sc_creds(self, mock_get_sc_creds, mock_get_config_creds):
+        Credentials(dragonchain_id='TestID')
+        mock_get_config_creds.assert_called_once()
+        mock_get_sc_creds.assert_called_once()
+
+    @patch('dragonchain_sdk.credentials.Credentials.get_environment_credentials', return_value=False)
+    @patch('dragonchain_sdk.credentials.Credentials.get_config_credentials', return_value=False)
+    @patch('dragonchain_sdk.credentials.Credentials.get_smart_contract_credentials', return_value=False)
+    def test_get_credentials_raises_when_no_creds_found(self, mock_get_sc_creds, mock_get_config_creds, mock_get_env):
+        self.assertRaises(exceptions.DragonchainIdentityNotFound, Credentials, dragonchain_id='TestID')
+        mock_get_sc_creds.assert_called_once()
+        mock_get_config_creds.assert_called_once()
 
     @patch.dict(os.environ, {'DRAGONCHAIN_ID': 'TestID', 'AUTH_KEY': 'TestKey', 'AUTH_KEY_ID': 'TestKeyId'})
     def test_gets_credentials_from_environ(self):
