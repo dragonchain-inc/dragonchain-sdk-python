@@ -19,6 +19,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+test.py
 
 # Unit test / coverage reports
 htmlcov/

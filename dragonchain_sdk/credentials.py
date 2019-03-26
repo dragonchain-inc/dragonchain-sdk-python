@@ -88,45 +88,71 @@ class Credentials(object):
             try:
                 # Check config ini file if ID isn't provided explicitly or in environment
                 config = configparser.ConfigParser()
-                config.read(self.get_credential_file_path())
+                config.read(Credentials.get_credential_file_path())
                 self.dragonchain_id = config.get('default', 'dragonchain_id')
             except (configparser.NoSectionError, configparser.NoOptionError):
                 raise exceptions.DragonchainIdentityNotFound('Could not locate dragonchain_id.')
 
     def get_credentials(self):
-        """Get an auth_key/auth_key_id pair if not provided. First checks environment, then configuration files
+        """Get an auth_key/auth_key_id pair if not provided. First checks environment, then configuration files, then smart contract location
 
         Returns:
             None, sets the class auth_key and auth_key_id instance variables
         """
+        if self.get_environment_credentials():
+            return
+        logger.debug('Credentials aren\'t in environment, trying to load from ini config file')
+        if self.get_config_credentials():
+            return
+        logger.debug('Credentials aren\'t in config file, trying to load as a smart contract')
+        if self.get_smart_contract_credentials():
+            return
+        raise exceptions.DragonchainIdentityNotFound('Unable to locate dragonchain authorization credentials')
+
+    def get_environment_credentials(self):
+        """Attempt to get credentials for a dragonchain from the environment
+
+        Returns:
+            Boolean True if successful, otherwise False
+        """
         logger.debug('Checking if credentials are in the environment')
         self.auth_key = os.environ.get('AUTH_KEY')
         self.auth_key_id = os.environ.get('AUTH_KEY_ID')
-        if not self.auth_key or not self.auth_key_id:
-            logger.debug('Credentials aren\'t in environment, trying to load from ini config file')
-            try:
-                # If both keys aren't in environment variables, check config file
-                config = configparser.ConfigParser()
-                config.read(self.get_credential_file_path())
-                self.auth_key = config.get(self.dragonchain_id, 'auth_key')
-                self.auth_key_id = config.get(self.dragonchain_id, 'auth_key_id')
-            except (configparser.NoSectionError, configparser.NoOptionError):
-                raise exceptions.AuthorizationNotFound('Could not locate authorization credentials.')
+        return bool(self.auth_key) and bool(self.auth_key_id)
 
-    def get_credential_file_path(self):
-        """Get the path for the credential file depending on the OS
+    def get_config_credentials(self):
+        """Attempt to get credentials for a dragonchain from the credentials file
 
-        Returns
-            String of the credential file path
+        Returns:
+            Boolean True if successful, otherwise False
         """
-        if os.name == 'nt':
-            logger.debug('Windows OS detected')
-            path = os.path.join(os.path.expandvars('%LOCALAPPDATA%'), 'dragonchain', 'credentials')
-        else:
-            logger.debug('Posix OS detected')
-            path = os.path.join(os.path.expanduser("~"), '.dragonchain', 'credentials')
-        logger.debug('Credentials file path: {}'.format(path))
-        return path
+        try:
+            # If both keys aren't in environment variables, check config file
+            config = configparser.ConfigParser()
+            config.read(Credentials.get_credential_file_path())
+            self.auth_key = config.get(self.dragonchain_id, 'auth_key')
+            self.auth_key_id = config.get(self.dragonchain_id, 'auth_key_id')
+            return True
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            logger.debug('Could not locate authorization credentials.')
+            return False
+
+    def get_smart_contract_credentials(self):
+        """Attempt to get credentials for a dragonchain from the standard location for a smart contract
+
+        Returns:
+            Boolean True if successful, otherwise False
+        """
+        try:
+            base_path = os.path.join(os.path.abspath(os.sep), 'var', 'openfaas', 'secrets')
+            auth_key = open(os.path.join(base_path, 'sc-{}-secret-key'.format(os.environ.get('SMART_CONTRACT_ID'))), 'r').read()
+            auth_key_id = open(os.path.join(base_path, 'sc-{}-auth-key-id'.format(os.environ.get('SMART_CONTRACT_ID'))), 'r').read()
+            self.auth_key = auth_key
+            self.auth_key_id = auth_key_id
+            return True
+        except (OSError, IOError, FileNotFoundError):
+            logger.debug('Could not locate authorization credentials for smart contracts.')
+            return False
 
     def get_hash_method(self, algorithm):
         """Return a hash method that supports the hashlib .new function
@@ -261,3 +287,19 @@ class Credentials(object):
         hmac = self.bytes_to_b64_str(self.create_hmac(self.auth_key, message_string))
         logger.debug('Generated Base64 HMAC string: {}'.format(hmac))
         return 'DC1-HMAC-{} {}:{}'.format(self.algorithm, self.auth_key_id, hmac)
+
+    @staticmethod
+    def get_credential_file_path():
+        """Get the path for the credential file depending on the OS
+
+        Returns:
+            String of the credential file path
+        """
+        if os.name == 'nt':
+            logger.debug('Windows OS detected')
+            path = os.path.join(os.path.expandvars('%LOCALAPPDATA%'), 'dragonchain', 'credentials')
+        else:
+            logger.debug('Posix OS detected')
+            path = os.path.join(os.path.expanduser("~"), '.dragonchain', 'credentials')
+        logger.debug('Credentials file path: {}'.format(path))
+        return path

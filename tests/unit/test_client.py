@@ -15,7 +15,6 @@ import dragonchain_sdk
 from unittest import TestCase
 from mock import patch, MagicMock
 from dragonchain_sdk.dragonchain_client import Client
-from dragonchain_sdk import exceptions
 
 
 @patch('dragonchain_sdk.dragonchain_client.Credentials')
@@ -115,45 +114,6 @@ class TestClientInitialization(TestCase):
 @patch('dragonchain_sdk.dragonchain_client.Request')
 @patch('dragonchain_sdk.dragonchain_client.Credentials')
 class TestClientMehods(TestCase):
-    def test_check_sc_runtime_raises_value_error(self, mock_creds, mock_request):
-        self.assertRaises(ValueError, Client.check_runtime, {})
-        self.assertRaises(ValueError, Client.check_runtime, [])
-        self.assertRaises(ValueError, Client.check_runtime, 'fortran')
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
-    def test_check_sc_runtime(self, mock_creds, mock_request):
-        self.assertEqual(Client.check_runtime('go1.x'), None)
-        self.assertEqual(Client.check_runtime('python3.6'), None)
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
-    def test_check_sc_type_raises_value_error(self, mock_creds, mock_request):
-        self.assertRaises(ValueError, Client.check_sc_type, {})
-        self.assertRaises(ValueError, Client.check_sc_type, [])
-        self.assertRaises(ValueError, Client.check_sc_type, 'subscription')
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
-    def test_check_sc_type(self, mock_creds, mock_request):
-        self.assertEqual(Client.check_sc_type('transaction'), None)
-        self.assertEqual(Client.check_sc_type('cron'), None)
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
-    def test_check_valid_library_contract_raises_value_error(self, mock_creds, mock_request):
-        self.assertRaises(ValueError, Client.check_valid_library_contract, {})
-        self.assertRaises(ValueError, Client.check_valid_library_contract, [])
-        self.assertRaises(ValueError, Client.check_valid_library_contract, 'subscription')
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
-    def test_check_valid_library_contract(self, mock_creds, mock_request):
-        self.assertEqual(Client.check_valid_library_contract('currency'), None)
-        self.assertEqual(Client.check_valid_library_contract('interchainWatcher'), None)
-        mock_creds.assert_not_called()
-        mock_request.assert_not_called()
-
     def test_build_transaction_dict_raises_type_error(self, mock_creds, mock_request):
         self.assertRaises(TypeError, Client.build_transaction_dict, {}, {'fake': 'payload'}, 'Tag:"value"')
         self.assertRaises(TypeError, Client.build_transaction_dict, 'FAKETXN', [], 'Tag:"value"')
@@ -180,6 +140,22 @@ class TestClientMehods(TestCase):
         mock_creds.assert_not_called()
         mock_request.assert_not_called()
 
+    def test_get_secret_throws_type_error(self, mock_creds, mock_request):
+        os.environ['SMART_CONTRACT_ID'] = ''
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.get_secret, None)
+        self.assertRaises(RuntimeError, self.client.get_secret, 'valid_secret')
+
+    @patch('dragonchain_sdk.dragonchain_client.open')
+    def test_get_secret_calls_open(self, mock_open, mock_creds, mock_request):
+        os.environ['SMART_CONTRACT_ID'] = 'bogusSCID'
+        self.client = Client()
+        mock_open.return_value.read.return_value = 'fakeSecret'
+        self.client.credentials.dragonchain_id = 'fakeDragonchainId'
+        self.client.get_secret('mySecret')
+        path = os.path.join(os.path.abspath(os.sep), 'var', 'openfaas', 'secrets', 'sc-bogusSCID-mySecret')
+        mock_open.assert_called_once_with(path, 'r')
+
     def test_get_status_calls_get(self, mock_creds, mock_request):
         self.client = Client()
         self.client.get_status()
@@ -199,122 +175,216 @@ class TestClientMehods(TestCase):
 
     def test_get_contract_throws_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.get_contract, [])
-        self.assertRaises(TypeError, self.client.get_contract, {})
-        self.assertRaises(TypeError, self.client.get_contract, 1234)
-        self.assertRaises(TypeError, self.client.get_contract, ())
+        self.assertRaises(TypeError, self.client.get_contract, 1234, 'str')
+        self.assertRaises(TypeError, self.client.get_contract, 'str', 1234)
+        self.assertRaises(TypeError, self.client.get_contract)
+        self.assertRaises(TypeError, self.client.get_contract, 'str', 'str')
 
-    def test_get_contract_calls_get(self, mock_creds, mock_request):
+    def test_get_contract_with_id_calls_get(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.get_contract('Test')
-        self.client.request.get.assert_called_once_with('/contract/Test')
+        self.client.get_contract('some_id')
+        self.client.request.get.assert_called_once_with('/contract/some_id')
 
-    def test_post_custom_contract_raises_type_error(self, mock_creds, mock_request):
+    def test_get_contract_with_txn_type_calls_get(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.post_custom_contract, [], 'MyCode', 'python3.6', 'handler', 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', [], 'python3.6', 'handler', 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', [], 'handler', 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', [], 'transaction', True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', [], True)
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', 'transaction', [])
-        self.assertRaises(TypeError, self.client.post_custom_contract, 'Name', 'MyCode', 'python3.6', 'handler', 'transaction', True, env_vars=[])
+        self.client.get_contract(txn_type='Name')
+        self.client.request.get.assert_called_once_with('/contract/txn_type/Name')
 
-    def test_post_custom_contract_calls_post(self, mock_creds, mock_request):
+    def test_post_contract_raises_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'handler', 'transaction', True, env_vars={'test': 'env'})
-        self.client.request.post.assert_called_once_with('/contract/Name', {
-            'version': '2',
-            'origin': 'custom',
-            'name': 'Name',
-            'code': 'MyCode',
-            'runtime': 'python3.6',
-            'sc_type': 'transaction',
-            'is_serial': True,
-            'handler': 'handler',
-            'custom_environment_variables': {'test': 'env'}
+        self.assertRaises(TypeError, self.client.post_contract, [], 'MyCode', 'python3.6', 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', [], 'python3.6', 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', [], 'transaction', True)
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', [], True)
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'transaction', {})
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'serial', [], [])
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'serial', [], {}, [])
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'serial', [], {}, {}, 'seconds')
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'serial', [], {}, {}, 1, 1)
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'serial', [], {}, {}, 1, 'cron', [])
+        self.assertRaises(TypeError, self.client.post_contract, 'Name', 'MyCode', 'python3.6', 'transaction', True, env_vars=[])
+
+    def test_post_contract_calls_post(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None, env={'test': 'env'})
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'env': {'test': 'env'}
+        })
+
+    def test_post_custom_contract_calls_post_with_args(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', ['something'], env={'test': 'env'})
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'env': {'test': 'env'},
+            'args': ['something']
+        })
+
+    def test_post_contract_calls_post_with_secrets(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None, None, None, 1)
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'seconds': 1
+        })
+
+    def test_post_contract_calls_post_with_cron(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None, None, None, None, '* * *')
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'cron': '* * *'
+        })
+
+    def test_post_contract_calls_post_with_auth(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None, None, None, None, None, 'auth')
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'auth': 'auth'
+        })
+
+    def test_post_custom_contract_calls_post_with_seconds(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None, None, {'secret': 'test'})
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial',
+            'secrets': {'secret': 'test'}
         })
 
     def test_post_custom_contract_calls_post_no_env(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.post_custom_contract('Name', 'MyCode', 'python3.6', 'handler', 'transaction', True)
-        self.client.request.post.assert_called_once_with('/contract/Name', {
-            'version': '2',
-            'origin': 'custom',
-            'name': 'Name',
-            'code': 'MyCode',
-            'runtime': 'python3.6',
-            'sc_type': 'transaction',
-            'is_serial': True,
-            'handler': 'handler'
-        })
-
-    def test_post_library_contract_raises_type_error(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(TypeError, self.client.post_library_contract, [], 'currency', env_vars=None)
-        self.assertRaises(TypeError, self.client.post_library_contract, 'Name', [], env_vars=None)
-        self.assertRaises(TypeError, self.client.post_library_contract, 'Name', 'currency', env_vars=[])
-
-    def test_post_library_contract_calls_post(self, mock_creds, mock_request):
-        self.client = Client()
-        self.client.post_library_contract('Name', 'currency', env_vars={'test': 'env'})
-        self.client.request.post.assert_called_once_with('/contract/Name', {
-            'version': '2',
-            'origin': 'library',
-            'name': 'Name',
-            'libraryContractName': 'currency',
-            'custom_environment_variables': {'test': 'env'}
-        })
-
-    def test_post_library_contract_calls_post_no_env(self, mock_creds, mock_request):
-        self.client = Client()
-        self.client.post_library_contract('Name', 'currency')
-        self.client.request.post.assert_called_once_with('/contract/Name', {
-            'version': '2',
-            'origin': 'library',
-            'name': 'Name',
-            'libraryContractName': 'currency'
+        self.client.post_contract('Name', 'serial', 'ubuntu:latest', 'python3.6', None)
+        self.client.request.post.assert_called_once_with('/contract', {
+            'version': '3',
+            'txn_type': 'Name',
+            'image': 'ubuntu:latest',
+            'cmd': 'python3.6',
+            'execution_order': 'serial'
         })
 
     def test_update_contract_raises_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.update_contract, name=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', status=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', code=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', runtime=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', sc_type=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', serial=[])
-        self.assertRaises(TypeError, self.client.update_contract, name='Name', env_vars=[])
-
-    def test_update_contract_raises_value_error(self, mock_creds, mock_request):
-        self.client = Client()
-        self.assertRaises(ValueError, self.client.update_contract, name=None)
+        self.assertRaises(TypeError, self.client.update_contract, contract_id=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', image=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', cmd=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', execution_order=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', desired_state=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', args={})
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', env=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', secrets=[])
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', seconds='seconds')
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', cron=1)
+        self.assertRaises(TypeError, self.client.update_contract, contract_id='some_id', auth=[])
 
     def test_update_contract_calls_put_no_env(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.update_contract(name='Name', status='enabled', sc_type='transaction', code='code', runtime='nodejs8.10', serial=True, env_vars=None)
-        self.client.request.put.assert_called_once_with('/contract/Name', {
-            'status': 'enabled',
-            'sc_type': 'transaction',
-            'code': 'code',
-            'runtime': 'nodejs8.10',
-            'serial': True
+        self.client.update_contract(contract_id='some_id', desired_state='enabled', execution_order='parallel', env=None)
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'desired_state': 'enabled',
+            'execution_order': 'parallel'
         })
 
     def test_update_contract_calls_put(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.update_contract(name='Name', status='enabled', sc_type='transaction', code='code', runtime='nodejs8.10', serial=True, env_vars={'test': 'env'})
-        self.client.request.put.assert_called_once_with('/contract/Name', {
-            'status': 'enabled',
-            'sc_type': 'transaction',
-            'code': 'code',
-            'runtime': 'nodejs8.10',
-            'serial': True,
-            'custom_environment_variables': {'test': 'env'}
+        self.client.update_contract(contract_id='some_id', desired_state='active', execution_order='parallel', env={'test': 'env'})
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'desired_state': 'active',
+            'execution_order': 'parallel',
+            'env': {'test': 'env'}
         })
 
-    def test_update_contract_no_op(self, mock_creds, mock_request):
+    def test_update_contract_calls_put_with_image(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(exceptions.EmptyUpdateException, self.client.update_contract, name='Name')
+        self.client.update_contract(contract_id='some_id', image='sampleImage')
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'image': 'sampleImage'
+        })
+
+    def test_update_contract_calls_put_with_cmd(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', cmd='command')
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'cmd': 'command'
+        })
+
+    def test_update_contract_calls_put_with_args(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', args=['arg'])
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'args': ['arg']
+        })
+
+    def test_update_contract_calls_put_with_secrets(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', secrets={'secret': 'value'})
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'secrets': {'secret': 'value'}
+        })
+
+    def test_update_contract_calls_put_with_seconds(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', seconds=1)
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'seconds': 1
+        })
+
+    def test_update_contract_calls_put_with_cron(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', cron='* * *')
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'cron': '* * *'
+        })
+
+    def test_update_contract_calls_put_with_auth(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.update_contract(contract_id='some_id', auth='auth')
+        self.client.request.put.assert_called_once_with('/contract/some_id', {
+            'version': '3',
+            'auth': 'auth'
+        })
+
+    def test_delete_contract_raises_type_error(self, mock_creds, mock_request):
+        self.client = Client()
+        self.assertRaises(TypeError, self.client.delete_contract, {})
+
+    def test_delete_contract_calls_delete(self, mock_creds, mock_request):
+        self.client = Client()
+        self.client.delete_contract(contract_id='some_id')
+        self.client.request.delete.assert_called_once_with('/contract/some_id', body={})
 
     def test_query_transactions_calls_get_without_params(self, mock_creds, mock_request):
         mock_request.return_value.get_lucene_query_params.return_value = ''
@@ -579,7 +649,7 @@ class TestClientMehods(TestCase):
     def test_delete_transaction_type_calls_delete(self, mock_creds, mock_request):
         self.client = Client()
         self.client.delete_transaction_type('MyCurrentType')
-        self.client.request.delete.assert_called_once_with('/transaction-type/MyCurrentType')
+        self.client.request.delete.assert_called_once_with('/transaction-type/MyCurrentType', body={})
 
     def test_delete_transaction_type_raises_error_type_not_string(self, mock_creds, mock_request):
         self.client = Client()
