@@ -562,56 +562,56 @@ class TestClientMehods(TestCase):
 
     def test_get_sc_heap_throws_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.get_sc_heap, key=[], sc_name='Test')
+        self.assertRaises(TypeError, self.client.get_sc_heap, key=[], sc_id='Test')
         self.assertRaises(TypeError, self.client.get_sc_heap, key=[])
-        self.assertRaises(TypeError, self.client.get_sc_heap, key='MyKey', sc_name=[])
+        self.assertRaises(TypeError, self.client.get_sc_heap, key='MyKey', sc_id=[])
 
-    @patch.dict(os.environ, {'SMART_CONTRACT_NAME': 'MyName'})
+    @patch.dict(os.environ, {'SMART_CONTRACT_ID': 'MyName'})
     def test_get_sc_heap_reads_env_and_calls_get(self, mock_creds, mock_request):
         self.client = Client()
         self.client.get_sc_heap(key='MyKey')
         self.client.request.get.assert_called_once_with('/get/MyName/MyKey', parse_response=False)
 
-    @patch.dict(os.environ, {'SMART_CONTRACT_NAME': 'MyName'})
+    @patch.dict(os.environ, {'SMART_CONTRACT_ID': 'MyName'})
     def test_get_sc_heap_reads_env_and_calls_get_with_override(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.get_sc_heap(sc_name='Override', key='MyKey')
+        self.client.get_sc_heap(sc_id='Override', key='MyKey')
         self.client.request.get.assert_called_once_with('/get/Override/MyKey', parse_response=False)
 
     def test_get_sc_heap_calls_get(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.get_sc_heap(key='MyKey', sc_name='MyContract')
+        self.client.get_sc_heap(key='MyKey', sc_id='MyContract')
         self.client.request.get.assert_called_once_with('/get/MyContract/MyKey', parse_response=False)
 
     def test_list_sc_heap_throws_type_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.list_sc_heap, folder=[], sc_name='MyContract')
-        self.assertRaises(TypeError, self.client.list_sc_heap, folder='MyFolder', sc_name=[])
+        self.assertRaises(TypeError, self.client.list_sc_heap, folder=[], sc_id='MyContract')
+        self.assertRaises(TypeError, self.client.list_sc_heap, folder='MyFolder', sc_id=[])
 
     def test_list_sc_heap_throws_value_error(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(ValueError, self.client.list_sc_heap, folder='MyFolder/', sc_name='MyContract')
+        self.assertRaises(ValueError, self.client.list_sc_heap, folder='MyFolder/', sc_id='MyContract')
 
-    @patch.dict(os.environ, {'SMART_CONTRACT_NAME': 'MyName'})
+    @patch.dict(os.environ, {'SMART_CONTRACT_ID': 'MyName'})
     def test_list_sc_heap_reads_env_and_calls_get(self, mock_creds, mock_request):
         self.client = Client()
         self.client.list_sc_heap(folder='MyFolder')
         self.client.request.get.assert_called_once_with('/list/MyName/MyFolder/')
 
-    @patch.dict(os.environ, {'SMART_CONTRACT_NAME': 'MyName'})
+    @patch.dict(os.environ, {'SMART_CONTRACT_ID': 'MyName'})
     def test_list_sc_heap_reads_env_and_calls_get_with_override(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.list_sc_heap(sc_name='Override', folder='MyFolder')
+        self.client.list_sc_heap(sc_id='Override', folder='MyFolder')
         self.client.request.get.assert_called_once_with('/list/Override/MyFolder/')
 
     def test_list_sc_heap_calls_get(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.list_sc_heap(sc_name='MyContract', folder='MyFolder')
+        self.client.list_sc_heap(sc_id='MyContract', folder='MyFolder')
         self.client.request.get.assert_called_once_with('/list/MyContract/MyFolder/')
 
     def test_list_sc_heap_calls_get_root(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.list_sc_heap(sc_name='MyContract')
+        self.client.list_sc_heap(sc_id='MyContract')
         self.client.request.get.assert_called_once_with('/list/MyContract/')
 
     def test_register_transaction_type_calls_post(self, mock_creds, mock_request):
