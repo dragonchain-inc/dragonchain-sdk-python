@@ -399,47 +399,47 @@ class Client(object):
             return self.request.get('/verifications/{}?level={}'.format(block_id, level))
         return self.request.get('/verifications/{}'.format(block_id))
 
-    def get_sc_heap(self, sc_name=None, key=None):
+    def get_sc_heap(self, sc_id=None, key=None):
         """Retrieve data from the heap storage of a smart contract
-        Note: When ran in an actual smart contract, sc_name will be pulled automatically from the environment if not explicitly provided
+        Note: When ran in an actual smart contract, sc_id will be pulled automatically from the environment if not explicitly provided
 
         Args:
             key (str): The key stored in the heap to retrieve
-            sc_name (str, optional): The name of the smart contract, optional if called from within a smart contract
+            sc_id (str, optional): The ID of the smart contract, optional if called from within a smart contract
 
         Returns:
             The value of the object in the heap
         """
         if not isinstance(key, str):
             raise TypeError('Parameter "key" must be of type str.')
-        if sc_name is None:
-            sc_name = os.environ.get('SMART_CONTRACT_NAME')
-        if not isinstance(sc_name, str):
-            raise TypeError('Parameter "sc_name" must be of type str.')
-        return self.request.get('/get/{}/{}'.format(sc_name, key), parse_response=False)
+        if sc_id is None:
+            sc_id = os.environ.get('SMART_CONTRACT_ID')
+        if not isinstance(sc_id, str):
+            raise TypeError('Parameter "sc_id" must be of type str.')
+        return self.request.get('/get/{}/{}'.format(sc_id, key), parse_response=False)
 
-    def list_sc_heap(self, sc_name=None, folder=None):
+    def list_sc_heap(self, sc_id=None, folder=None):
         """Lists all objects stored in a smart contracts heap
-        Note: When ran in an actual smart contract, sc_name will be pulled automatically from the environment if not explicitly provided
+        Note: When ran in an actual smart contract, sc_id will be pulled automatically from the environment if not explicitly provided
 
         Args:
-            sc_name (str, optional): sc_name heap to list. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
+            sc_id (str, optional): sc_id heap to list. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
             folder (str, optional): the folder to list in the heap. If not provided, it will default to the root of the heap
 
         Returns:
             Parsed json response from the chain
         """
-        if sc_name is None:
-            sc_name = os.environ.get('SMART_CONTRACT_NAME')
-        if not isinstance(sc_name, str):
-            raise TypeError('Parameter "sc_name" must be of type str.')
+        if sc_id is None:
+            sc_id = os.environ.get('SMART_CONTRACT_ID')
+        if not isinstance(sc_id, str):
+            raise TypeError('Parameter "sc_id" must be of type str.')
         if folder is not None:
             if not isinstance(folder, str):
                 raise TypeError('Parameter "folder" must be of type str.')
             if folder.endswith('/'):
                 raise ValueError('Parameter "folder" cannot end with /.')
-            return self.request.get('/list/{}/{}/'.format(sc_name, folder))
-        return self.request.get('/list/{}/'.format(sc_name))
+            return self.request.get('/list/{}/{}/'.format(sc_id, folder))
+        return self.request.get('/list/{}/'.format(sc_id))
 
     def get_transaction_type(self, transaction_type):
         """Gets information on a registered transaction type
