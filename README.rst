@@ -107,3 +107,8 @@ in various ways, and are checked in the following order of precedence:
       auth_key = aS73Si7agvX9gfxnLMh6ack9DEuidKiwQxkqBudXl81
 
 
+Contributing
+------------
+
+Dragonchain is happy to welcome contributions from the community.
+You can get started `here <https://github.com/dragonchain-inc/dragonchain-sdk-python/blob/master/CONTRIBUTING.md>`_.
