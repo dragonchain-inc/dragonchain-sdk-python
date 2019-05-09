@@ -441,7 +441,7 @@ class Client(object):
             return self.request.get('/list/{}/{}/'.format(sc_id, folder))
         return self.request.get('/list/{}/'.format(sc_id))
 
-    def create_public_transaction(self, network, transaction):
+    def create_public_blockchain_transaction(self, network, transaction):
         """Create and sign a public blockchain transaction using your chain's private keys
 
         Args:

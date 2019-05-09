@@ -679,9 +679,9 @@ class TestClientMehods(TestCase):
         self.client.get_public_blockchain_addresses()
         self.client.request.get.assert_called_once_with('/public-blockchain-address')
 
-    def test_create_public_transaction(self, mock_creds, mock_request):
+    def test_create_public_blockchain_transaction(self, mock_creds, mock_request):
         self.client = Client()
-        self.client.create_public_transaction('ETH_ROPSTEN', {
+        self.client.create_public_blockchain_transaction('ETH_ROPSTEN', {
             'to': '0x0000000000000000000000000000000000000000',
             'value': '0x0'
         })
@@ -695,12 +695,12 @@ class TestClientMehods(TestCase):
 
     def test_create_public_throws_value_error_on_invalid_network(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(ValueError, self.client.create_public_transaction, 'NEO_MAINNET', {})
+        self.assertRaises(ValueError, self.client.create_public_blockchain_transaction, 'NEO_MAINNET', {})
 
     def test_create_public_throws_type_error_on_invalid_network_type(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.create_public_transaction, b'ETH_MAINNET', {})
+        self.assertRaises(TypeError, self.client.create_public_blockchain_transaction, b'ETH_MAINNET', {})
 
     def test_create_public_throws_type_error_on_invalid_transaction_type(self, mock_creds, mock_request):
         self.client = Client()
-        self.assertRaises(TypeError, self.client.create_public_transaction, 'ETH_MAINNET', 'invalid')
+        self.assertRaises(TypeError, self.client.create_public_blockchain_transaction, 'ETH_MAINNET', 'invalid')
