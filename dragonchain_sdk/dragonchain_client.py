@@ -474,10 +474,13 @@ class Client(object):
         Returns:
             The built and signed transaction
         """
+        valid_networks = ['BTC_MAINNET', 'BTC_TESTNET3', 'ETH_MAINNET', 'ETH_ROPSTEN', 'ETC_MAINNET', 'ETC_MORDEN']
         if not isinstance(network, str):
             raise TypeError('Parameter "network" must be of type str.')
         if not isinstance(transaction, dict):
             raise TypeError('Parameter "transaction" must be of type str.')
+        if network not in valid_networks:
+            raise ValueError('Parameter "network" must be one of {}.'.format(valid_networks))
 
         body = {
             'network': network,
@@ -487,7 +490,7 @@ class Client(object):
 
     def get_public_blockchain_addresses(self):
         """Get interchain addresses for this Dragonchain node (L1 and L5 only)
-        
+
         Returns:
             Dictionary containing addresses
 
