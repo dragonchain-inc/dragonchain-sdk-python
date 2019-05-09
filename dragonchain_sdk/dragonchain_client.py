@@ -441,6 +441,59 @@ class Client(object):
             return self.request.get('/list/{}/{}/'.format(sc_id, folder))
         return self.request.get('/list/{}/'.format(sc_id))
 
+    def create_public_transaction(self, network, transaction):
+        """Create and sign a public blockchain transaction using your chain's private keys
+
+        Args:
+            network (str): network to create transaction for. Some valid values are:
+                BTC_MAINNET
+                BTC_TESTNET3
+                ETH_MAINNET
+                ETH_ROPSTEN
+                ETC_MAINNET
+                ETC_MORDEN
+
+            transaction (dict): A dictionary representing the transaction to create
+                BTC: {
+                    "outputs": (array of {'to': str, 'value': float}, optional)
+                    "fee": (optional, int) fee to pay in satoshis/byte. If not supplied, it will be estimated for you.
+                    "data": (optional, str) string to embed in the transaction as null-data output type
+                    "change": (optional, str) address to send change to. If not supplied, it will default to the address you are sending from
+                }
+
+                If no options are provided for BTC, a transaction will be created that consolidates your UTXOs
+
+                ETH/ETC: {
+                    "to": (hex str) the address to send to
+                    "value": (hex str) value in wei to send
+                    "data": (optional, hex str) data to publish in the transaction
+                    "gasPrice": (optional, str) gas price in gwei to pay, if not supplied it will be estimated for you.
+                    "gas": (optional, str) maximum amount of gas allowed (gasLimit), if not supplied it will be estimated for you.
+                }
+
+        Returns:
+            The built and signed transaction
+        """
+        if not isinstance(network, str):
+            raise TypeError('Parameter "network" must be of type str.')
+        if not isinstance(transaction, dict):
+            raise TypeError('Parameter "transaction" must be of type str.')
+
+        body = {
+            'network': network,
+            'transaction': transaction
+        }
+        return self.request.post('/public-blockchain-transaction', body=body)
+
+    def get_public_blockchain_addresses(self):
+        """Get interchain addresses for this Dragonchain node (L1 and L5 only)
+        
+        Returns:
+            Dictionary containing addresses
+
+        """
+        return self.request.get('/public-blockchain-address')
+
     def get_transaction_type(self, transaction_type):
         """Gets information on a registered transaction type
 
