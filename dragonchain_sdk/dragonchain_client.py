@@ -21,7 +21,7 @@ class Client(object):
     """Construct a new ``Client`` object
 
     Args:
-        dragonchain_id (str): The ID of the chain to connect to.
+        dragonchain_id (str, optional): The ID of the chain to connect to.
         auth_key_id (str, optional): The authorization key ID
         auth_key (str, optional): The authorization key
         endpoint (str, optional): The endpoint of the Dragonchain
@@ -31,12 +31,12 @@ class Client(object):
     Returns:
         A new Dragonchain client.
     """
-    def __init__(self, dragonchain_id=None, auth_key_id=None, auth_key=None, endpoint=None, verify=True, algorithm='SHA256'):
+    def __init__(self, dragonchain_id: str = None, auth_key_id: str = None, auth_key: str = None, endpoint: str = None, verify: bool = True, algorithm: str = 'SHA256'):
         self.credentials = Credentials(dragonchain_id, auth_key, auth_key_id, algorithm)
         self.request = Request(self.credentials, endpoint, verify)
         logger.debug('Client finished initialization')
 
-    def override_credentials(self, auth_key=None, auth_key_id=None, dragonchain_id=None, update_endpoint=True):
+    def override_credentials(self, auth_key: str = None, auth_key_id: str = None, dragonchain_id: str = None, update_endpoint: bool = True):
         """Change dragonchain_id, auth_key or auth_key_id for this client
 
         Args:
@@ -44,6 +44,9 @@ class Client(object):
             auth_key_id (str, optional): The authorization key ID
             dragonchain_id (str, optional): The Dragonchain ID
             update_endpoint (bool, optional): If endpoint should automatically be updated for a new dragonchain_id
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             None, sets instance variables on credentials service
@@ -68,13 +71,18 @@ class Client(object):
 
         logger.info('Credentials updated')
 
-    def get_secret(self, secret_name):
+    def get_secret(self, secret_name: str):
         """Gets secrets for smart contracts
 
         Args:
             secret_name (str): name of the secret to retrieve
+
+        Raises:
+            TypeError with bad parameter types
+            RuntimeError if not running in a smart contract environment
+
         Returns:
-            Returns the secret from the file location
+            String of the value of the specified secret
         """
         if not isinstance(secret_name, str):
             raise TypeError('Parameter "secret_name" must be of type str.')
@@ -84,14 +92,14 @@ class Client(object):
         return open(path, 'r').read()
 
     def get_status(self):
-        """Make a PUT request to a chain
+        """Get the status from a chain
 
         Returns:
             Returns the status of a Dragonchain
         """
         return self.request.get('/status')
 
-    def query_contracts(self, query=None, sort=None, offset=0, limit=10):
+    def query_contracts(self, query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's smart contracts
 
         Args:
@@ -106,12 +114,15 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(query, sort, offset, limit)
         return self.request.get('/contract{}'.format(query_params))
 
-    def get_contract(self, contract_id=None, txn_type=None):
+    def get_contract(self, contract_id: str = None, txn_type: str = None):
         """Perform a query on a chain's smart contracts
 
         Args:
             contract_id (str, exclusive): Id of the contract to get
             txn_type (str, exclusive): Name of the contract to get
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             The contract returned from the request
@@ -129,20 +140,23 @@ class Client(object):
         else:
             raise TypeError('At least one of "contract_id" or "txn_type" must be specified')
 
-    def post_contract(self, txn_type, execution_order, image, cmd, args=None, env=None, secrets=None, seconds=None, cron=None, auth=None):
+    def post_contract(self, txn_type: str, execution_order: str, image: str, cmd: str, args: list = None, env: dict = None, secrets: dict = None, seconds: int = None, cron: str = None, auth: str = None):
         """Post a contract to a chain
 
         Args:
             txn_type (str): txn_type of the contract to create
-            execution_order (string): Order of execution. Valid values are 'serial' or 'parallel'
+            execution_order (str): Order of execution. Valid values are 'serial' or 'parallel'
             image (str): Docker image containing the smart contract logic
             cmd (str): Entrypoint command to run in the docker container
             args (list, optional): List of arguments to the cmd field
             env (dict, optional): dict mapping of environment variables for your contract runtime
             secrets (dict, optional): dict mapping of secrets for your contract runtime
-            seconds (string, optional): The seconds of scheduled execution in seconds
-            cron (string, optional): The rate of scheduled execution specified as a cron
-            auth (string, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
+            seconds (int, optional): The seconds of scheduled execution in seconds
+            cron (str, optional): The rate of scheduled execution specified as a cron
+            auth (str, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Success or failure object
@@ -189,12 +203,12 @@ class Client(object):
             body['auth'] = auth
         return self.request.post('/contract', body)
 
-    def update_contract(self, contract_id, execution_order=None, image=None, cmd=None, args=None, desired_state=None, env={}, secrets={}, seconds=None, cron=None, auth=None):
+    def update_contract(self, contract_id: str, execution_order: str = None, image: str = None, cmd: str = None, args: list = None, desired_state: str = None, env: dict = {}, secrets: dict = {}, seconds: int = None, cron: str = None, auth: str = None):
         """Update an existing smart contract. The contract_id and at least one optional parameter must be supplied.
 
         Args:
             contract_id (str): contract_id of the contract to create
-            execution_order (string): Order of execution. Valid values are 'serial' or 'parallel'
+            execution_order (str): Order of execution. Valid values are 'serial' or 'parallel'
             image (str): Docker image containing the smart contract logic
             cmd (str): Entrypoint command to run in the docker container
             args (list, optional): List of arguments to the cmd field
@@ -202,8 +216,11 @@ class Client(object):
             env (dict, optional): dict mapping of environment variables for your contract runtime
             secrets (dict, optional): dict mapping of secrets for your contract runtime
             seconds (int, optional): The seconds of scheduled execution in seconds
-            cron (string, optional): The rate of scheduled execution specified as a cron
-            auth (string, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
+            cron (str, optional): The rate of scheduled execution specified as a cron
+            auth (str, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Success or failure object
@@ -257,11 +274,14 @@ class Client(object):
 
         return self.request.put('/contract/{}'.format(contract_id), body)
 
-    def delete_contract(self, contract_id):
+    def delete_contract(self, contract_id: str):
         """Delete an existing contract
 
         Args:
             contract_id (str): Transaction type of the contract to delete
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             The results of the delete request
@@ -270,7 +290,7 @@ class Client(object):
             raise TypeError('Parameter "state" must be of type str.')
         return self.request.delete('/contract/{}'.format(contract_id), body={})
 
-    def query_transactions(self, query=None, sort=None, offset=0, limit=10):
+    def query_transactions(self, query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's transactions
 
         Args:
@@ -285,11 +305,14 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(query, sort, offset, limit)
         return self.request.get('/transaction{}'.format(query_params))
 
-    def get_transaction(self, txn_id):
+    def get_transaction(self, txn_id: str):
         """Get a specific transaction by id
 
         Args:
-            txn_id (str, uuid): ID of the transaction to get
+            txn_id (str): ID of the transaction to get (should be a UUID)
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             The transaction searched for
@@ -298,7 +321,7 @@ class Client(object):
             raise TypeError('Paramter "txn_id" must be of type str.')
         return self.request.get('/transaction/{}'.format(txn_id))
 
-    def post_transaction(self, txn_type, payload, tag=None):
+    def post_transaction(self, txn_type: str, payload, tag: str = None):
         """Post a transaction to a chain
 
         Args:
@@ -309,13 +332,16 @@ class Client(object):
         Returns:
             Transaction ID on success
         """
-        return self.request.post('/transaction', Client.build_transaction_dict(txn_type, payload, tag))
+        return self.request.post('/transaction', _build_transaction_dict(txn_type, payload, tag))
 
-    def post_transaction_bulk(self, txn_list):
+    def post_transaction_bulk(self, txn_list: list):
         """Post many transactions to a chain at once, over a single connnection
 
         Args:
             txn_list (list): List of transaction dictionaries. Schema: ``{'txn_type': 'str', 'payload': 'str or dict', 'tag': 'str (optional)'}``
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             List of succeeded transaction id's and list of failed transactions
@@ -328,30 +354,11 @@ class Client(object):
         for txn in txn_list:
             if not isinstance(txn, dict):
                 raise TypeError('All items in parameter "txn_list" must be of type dict.')
-            post_data.append(Client.build_transaction_dict(txn.get('txn_type'), txn.get('payload'), txn.get('tag')))
+            post_data.append(_build_transaction_dict(txn.get('txn_type'), txn.get('payload'), txn.get('tag')))
 
         return self.request.post('/transaction_bulk', post_data)
 
-    @staticmethod
-    def build_transaction_dict(txn_type, payload, tag=None):
-        if not isinstance(txn_type, str):
-            raise TypeError('Parameter "txn_type" must be of type str.')
-        if not isinstance(payload, str) and not isinstance(payload, dict):
-            raise TypeError('Parameter "payload" must be of type dict or str.')
-        if tag is not None and not isinstance(tag, str):
-            raise TypeError('Parameter "tag" must be of type str.')
-
-        body = {
-            'version': '1',
-            'txn_type': txn_type,
-            'payload': payload
-        }
-        if tag:
-            body['tag'] = tag
-
-        return body
-
-    def query_blocks(self, query=None, sort=None, offset=0, limit=10):
+    def query_blocks(self, query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's blocks
 
         Args:
@@ -370,10 +377,13 @@ class Client(object):
         """Get a specific block by id
 
         Args:
-            block_id (int): ID of the block to get
+            block_id (str, int): ID of the block to get
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
-            The block searched for
+            The block which was retrieved from the chain
         """
         if not isinstance(block_id, str) and not isinstance(block_id, int):
             raise TypeError('Parameter "block_id" must be of type str or int.')
@@ -383,8 +393,11 @@ class Client(object):
         """Get higher level block verifications by level 1 block id
 
         Args:
-            block_id (int): ID of the block to get
-            level (int): Level of verifications to get (valid values are 2, 3, 4 and 5)
+            block_id (str, int): ID of the block to get
+            level (str, int, optional): Level of verifications to get (valid values are 2, 3, 4 and 5)
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Higher level block verifications
@@ -399,13 +412,16 @@ class Client(object):
             return self.request.get('/verifications/{}?level={}'.format(block_id, level))
         return self.request.get('/verifications/{}'.format(block_id))
 
-    def get_sc_heap(self, sc_id=None, key=None):
+    def get_sc_heap(self, sc_id: str = None, key: str = None):
         """Retrieve data from the heap storage of a smart contract
         Note: When ran in an actual smart contract, sc_id will be pulled automatically from the environment if not explicitly provided
 
         Args:
             key (str): The key stored in the heap to retrieve
             sc_id (str, optional): The ID of the smart contract, optional if called from within a smart contract
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             The value of the object in the heap
@@ -418,13 +434,17 @@ class Client(object):
             raise TypeError('Parameter "sc_id" must be of type str.')
         return self.request.get('/get/{}/{}'.format(sc_id, key), parse_response=False)
 
-    def list_sc_heap(self, sc_id=None, folder=None):
+    def list_sc_heap(self, sc_id: str = None, folder: str = None):
         """Lists all objects stored in a smart contracts heap
         Note: When ran in an actual smart contract, sc_id will be pulled automatically from the environment if not explicitly provided
 
         Args:
             sc_id (str, optional): sc_id heap to list. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
             folder (str, optional): the folder to list in the heap. If not provided, it will default to the root of the heap
+
+        Raises:
+            TypeError with bad parameter types
+            ValueError with bad parameter values
 
         Returns:
             Parsed json response from the chain
@@ -441,7 +461,7 @@ class Client(object):
             return self.request.get('/list/{}/{}/'.format(sc_id, folder))
         return self.request.get('/list/{}/'.format(sc_id))
 
-    def create_public_blockchain_transaction(self, network, transaction):
+    def create_public_blockchain_transaction(self, network: str, transaction: dict):
         """Create and sign a public blockchain transaction using your chain's private keys
 
         Args:
@@ -471,6 +491,10 @@ class Client(object):
                     "gas": (optional, str) maximum amount of gas allowed (gasLimit), if not supplied it will be estimated for you.
                 }
 
+        Raises:
+            TypeError with bad parameter types
+            ValueError with bad parameter values
+
         Returns:
             The built and signed transaction
         """
@@ -493,15 +517,17 @@ class Client(object):
 
         Returns:
             Dictionary containing addresses
-
         """
         return self.request.get('/public-blockchain-address')
 
-    def get_transaction_type(self, transaction_type):
+    def get_transaction_type(self, transaction_type: str):
         """Gets information on a registered transaction type
 
         Args:
             transaction_type (str): transaction_type to retrieve data for
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             parsed json response of the transaction type or None
@@ -518,12 +544,15 @@ class Client(object):
         """
         return self.request.get('/transaction-types')
 
-    def update_transaction_type(self, transaction_type, custom_indexes=None):
+    def update_transaction_type(self, transaction_type: str, custom_indexes: str = None):
         """Updates the custom index of a given registered transaction type
 
         Args:
             transaction_type (str): transaction_type to update
             custom_indexes (list): custom_indexes to update
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -537,12 +566,15 @@ class Client(object):
         params = {"version": "1", "custom_indexes": custom_indexes}
         return self.request.put('/transaction-type/{}'.format(transaction_type), params)
 
-    def register_transaction_type(self, transaction_type, custom_indexes=None):
+    def register_transaction_type(self, transaction_type: str, custom_indexes: list = None):
         """Registers a new custom index
 
         Args:
             transaction_type (str): transaction_type to update
             custom_indexes (list): custom_indexes to update
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -556,11 +588,14 @@ class Client(object):
             params['custom_indexes'] = custom_indexes
         return self.request.post('/transaction-type', params)
 
-    def delete_transaction_type(self, transaction_type):
+    def delete_transaction_type(self, transaction_type: str):
         """Deletes a transaction type registration
 
         Args:
             transaction_type (str): transaction_type to delete
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -568,3 +603,35 @@ class Client(object):
         if not isinstance(transaction_type, str):
             raise TypeError('Parameter "transaction_type" must be of type str.')
         return self.request.delete('/transaction-type/{}'.format(transaction_type), body={})
+
+
+def _build_transaction_dict(txn_type: str, payload, tag: str = None):
+    """Build the json (dictionary) body for a transaction given its inputs
+
+    Args:
+        txn_type (str): The transaction type for this transaction
+        payload (str, dict): The intended payload for this transaction
+        tag (str, optional): The intended tag for this transaction
+
+    Raises:
+        TypeError with bad parameter types
+
+    Returns:
+        List of succeeded transaction id's and list of failed transactions
+    """
+    if not isinstance(txn_type, str):
+        raise TypeError('Parameter "txn_type" must be of type str.')
+    if not isinstance(payload, str) and not isinstance(payload, dict):
+        raise TypeError('Parameter "payload" must be of type dict or str.')
+    if tag is not None and not isinstance(tag, str):
+        raise TypeError('Parameter "tag" must be of type str.')
+
+    body = {
+        'version': '1',
+        'txn_type': txn_type,
+        'payload': payload
+    }
+    if tag:
+        body['tag'] = tag
+
+    return body

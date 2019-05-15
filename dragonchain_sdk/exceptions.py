@@ -22,6 +22,10 @@ class AuthorizationNotFound(DragonchainException):
     """Raised when no form of authorization can be found"""
 
 
+class MatchmakingException(DragonchainException):
+    """Raised when there is a non-200 response from the remote matchmaking service"""
+
+
 class DragonchainIdentityNotFound(DragonchainException):
     """Raised when no form of dragonchain ID can be found"""
 

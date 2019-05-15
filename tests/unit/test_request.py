@@ -26,22 +26,25 @@ class TestRequestsInitialization(TestCase):
         self.assertRaises(TypeError, Request, 'not a credentials service')
         self.assertRaises(TypeError, Request, self.creds, verify=[])
 
-    def test_initialized_correct(self):
+    @patch('dragonchain_sdk.request.get_endpoint', return_value='https://dummy.test')
+    def test_initialized_correct(self, mock_get_endpoint):
         request = Request(self.creds)
         self.assertEqual(request.credentials, self.creds)
-        self.assertEqual(request.endpoint, 'https://TestID.api.dragonchain.com')
+        self.assertEqual(request.endpoint, 'https://dummy.test')
         self.assertEqual(request.verify, True)
 
 
 class TestRequestsMethods(TestCase):
     def setUp(self):
         self.creds = Credentials(dragonchain_id='TestID', auth_key='TestKey', auth_key_id='TestKeyId')
-        self.request = Request(self.creds)
+        self.request = Request(self.creds, endpoint='https://dummy.test')
 
-    def test_update_endpoint_no_params(self):
+    @patch('dragonchain_sdk.request.get_endpoint', return_value='hi')
+    def test_update_endpoint_no_params(self, mock_get_endpoint):
         self.creds.dragonchain_id = 'TestID2'
         self.request.update_endpoint()
-        self.assertEqual(self.request.endpoint, 'https://TestID2.api.dragonchain.com')
+        mock_get_endpoint.assert_called_once_with('TestID2')
+        self.assertEqual(self.request.endpoint, 'hi')
 
     def test_update_endpoint(self):
         self.request.update_endpoint('https://newurl.com')
@@ -203,7 +206,7 @@ class TestRequestsMethods(TestCase):
 
     def test_make_request_returns_ok_false_on_bad_response_status(self):
         with requests_mock.mock() as m:
-            m.get('https://TestID.api.dragonchain.com/transaction', status_code=400, text='{"error": "some error"}')
+            m.get('https://dummy.test/transaction', status_code=400, text='{"error": "some error"}')
             expected_response = {
                 'ok': False,
                 'status': 400,
@@ -213,7 +216,7 @@ class TestRequestsMethods(TestCase):
 
     def test_make_request_parse_json(self):
         with requests_mock.mock() as m:
-            m.get('https://TestID.api.dragonchain.com/transaction', status_code=200, json={'test': 'object'})
+            m.get('https://dummy.test/transaction', status_code=200, json={'test': 'object'})
             self.request._make_request('GET', '/transaction')
             expected_response = {
                 'ok': True,
@@ -224,7 +227,7 @@ class TestRequestsMethods(TestCase):
 
     def test_make_request_no_parse_json(self):
         with requests_mock.mock() as m:
-            m.get('https://TestID.api.dragonchain.com/transaction', status_code=200, text='{"test": "object"}')
+            m.get('https://dummy.test/transaction', status_code=200, text='{"test": "object"}')
             expected_response = {
                 'ok': True,
                 'status': 200,

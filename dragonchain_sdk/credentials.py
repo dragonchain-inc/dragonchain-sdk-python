@@ -9,14 +9,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import configparser
 import hashlib
 import hmac
-import os
 import sys
 import base64
 import logging
-from dragonchain_sdk import exceptions
+from dragonchain_sdk.configuration import get_dragonchain_id, get_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -30,22 +28,25 @@ class Credentials(object):
         auth_key_id (str, optional): The auth_key_id associated with the provided auth_key
         algorithm (str, optional): The hash algorithm to use with the HMAC authentication scheme (SHA256 | BLAKE2b512 | SHA3-256)
 
+    Raises:
+        TypeError with bad parameter types
+
     Returns:
         A new Credentials object.
     """
-    def __init__(self, dragonchain_id=None, auth_key=None, auth_key_id=None, algorithm='SHA256'):
+    def __init__(self, dragonchain_id: str = None, auth_key: str = None, auth_key_id: str = None, algorithm: str = 'SHA256'):
         if dragonchain_id is None:
-            self.get_dragonchain_id()
+            self.dragonchain_id = get_dragonchain_id()
         else:
             logger.debug('dragonchain_id provided in constructor parameters, using this excplicitly')
             if isinstance(dragonchain_id, str):
                 self.dragonchain_id = dragonchain_id
             else:
                 raise TypeError('Parameter "dragonchain_id" must be of type str.')
-            logger.debug('Loaded dragonchain id {}'.format(dragonchain_id))
+        logger.debug('Loaded dragonchain id {}'.format(self.dragonchain_id))
 
         if auth_key is None or auth_key_id is None:
-            self.get_credentials()
+            self.auth_key_id, self.auth_key = get_credentials(self.dragonchain_id)
         else:
             logger.debug('Auth keys provided in constructor parameters, using these excplicitly')
             if isinstance(auth_key, str) and isinstance(auth_key_id, str):
@@ -58,110 +59,36 @@ class Credentials(object):
         self.update_algorithm(algorithm)
         logger.debug('Created credentials client for {}'.format(dragonchain_id))
 
-    def update_algorithm(self, algorithm):
+    def update_algorithm(self, algorithm: str):
         """Update the algorithm to use with these credentials
 
         Args:
             algorithm (str): The algorithm to use. Valid options are BLAKE2b512, SHA256, or SHA3-256
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             None, sets the HMAC signing algorithm for this credential instance
         """
         if isinstance(algorithm, str):
             self.hash_method = self.get_hash_method(algorithm)
-            logger.debug('Valid hash method provided, setting algorithm')
             self.algorithm = algorithm
-            logger.info('Updated hashing algorithm to {}'.format(algorithm))
+            logger.debug('Updated hashing algorithm to {}'.format(algorithm))
         else:
             raise TypeError('Parameter "algorithm" must be of type str.')
 
-    def get_dragonchain_id(self):
-        """Get the dragonchain id if not provided. First checks environment, then configuration files
-
-        Returns:
-            None, sets class dragonchain_id instance variable
-        """
-        logger.debug('Checking if dragonchain_id is in the environment')
-        self.dragonchain_id = os.environ.get('DRAGONCHAIN_ID')
-        if not self.dragonchain_id:
-            logger.debug('dragonchain_id isn\'t in the environment, trying to load default from ini config file')
-            try:
-                # Check config ini file if ID isn't provided explicitly or in environment
-                config = configparser.ConfigParser()
-                config.read(Credentials.get_credential_file_path())
-                self.dragonchain_id = config.get('default', 'dragonchain_id')
-            except (configparser.NoSectionError, configparser.NoOptionError):
-                raise exceptions.DragonchainIdentityNotFound('Could not locate dragonchain_id.')
-
-    def get_credentials(self):
-        """Get an auth_key/auth_key_id pair if not provided. First checks environment, then configuration files, then smart contract location
-
-        Returns:
-            None, sets the class auth_key and auth_key_id instance variables
-        """
-        if self.get_environment_credentials():
-            return
-        logger.debug('Credentials aren\'t in environment, trying to load from ini config file')
-        if self.get_config_credentials():
-            return
-        logger.debug('Credentials aren\'t in config file, trying to load as a smart contract')
-        if self.get_smart_contract_credentials():
-            return
-        raise exceptions.DragonchainIdentityNotFound('Unable to locate dragonchain authorization credentials')
-
-    def get_environment_credentials(self):
-        """Attempt to get credentials for a dragonchain from the environment
-
-        Returns:
-            Boolean True if successful, otherwise False
-        """
-        logger.debug('Checking if credentials are in the environment')
-        self.auth_key = os.environ.get('AUTH_KEY')
-        self.auth_key_id = os.environ.get('AUTH_KEY_ID')
-        return bool(self.auth_key) and bool(self.auth_key_id)
-
-    def get_config_credentials(self):
-        """Attempt to get credentials for a dragonchain from the credentials file
-
-        Returns:
-            Boolean True if successful, otherwise False
-        """
-        try:
-            # If both keys aren't in environment variables, check config file
-            config = configparser.ConfigParser()
-            config.read(Credentials.get_credential_file_path())
-            self.auth_key = config.get(self.dragonchain_id, 'auth_key')
-            self.auth_key_id = config.get(self.dragonchain_id, 'auth_key_id')
-            return True
-        except (configparser.NoSectionError, configparser.NoOptionError):
-            logger.debug('Could not locate authorization credentials.')
-            return False
-
-    def get_smart_contract_credentials(self):
-        """Attempt to get credentials for a dragonchain from the standard location for a smart contract
-
-        Returns:
-            Boolean True if successful, otherwise False
-        """
-        try:
-            base_path = os.path.join(os.path.abspath(os.sep), 'var', 'openfaas', 'secrets')
-            auth_key = open(os.path.join(base_path, 'sc-{}-secret-key'.format(os.environ.get('SMART_CONTRACT_ID'))), 'r').read()
-            auth_key_id = open(os.path.join(base_path, 'sc-{}-auth-key-id'.format(os.environ.get('SMART_CONTRACT_ID'))), 'r').read()
-            self.auth_key = auth_key
-            self.auth_key_id = auth_key_id
-            return True
-        except (OSError, IOError, FileNotFoundError):
-            logger.debug('Could not locate authorization credentials for smart contracts.')
-            return False
-
-    def get_hash_method(self, algorithm):
+    def get_hash_method(self, algorithm: str):
         """Return a hash method that supports the hashlib .new function
 
         Args:
             algorithm (str): The algorithm to use. Valid options are BLAKE2b512, SHA256, or SHA3-256
 
+        Raises:
+            NotImplementedError when provided algorithm is not supported
+
         Returns
-            Hash method
+            hashlib interface compatible hash method
         """
         if algorithm == 'SHA256':
             return hashlib.sha256
@@ -172,11 +99,14 @@ class Credentials(object):
                 return hashlib.sha3_256
         raise NotImplementedError('{} is not a supported hash algorithm.'.format(algorithm))
 
-    def bytes_to_b64_str(self, unencoded_bytes):
+    def bytes_to_b64_str(self, unencoded_bytes: bytes):
         """Take a bytes object and output a base64 python string
 
         Args:
-            unencoded_bytes (str): Python bytes object to encode
+            unencoded_bytes (bytes): Python bytes object to encode
+
+        Raises:
+            TypeError with bad parameter types
 
         Returns:
             String of the base64 encoded bytes
@@ -190,6 +120,10 @@ class Credentials(object):
 
         Args:
             input_data (bytes or str): input to process
+
+        Raises:
+            TypeError with bad parameter types
+            ValueError with bad parameter values
 
         Returns:
             bytes object representation of input
@@ -226,7 +160,7 @@ class Credentials(object):
         """
         return self.hash_method(self.bytes_from_input(input_data)).digest()
 
-    def create_hmac(self, secret, message):
+    def create_hmac(self, secret: str, message):
         """Create an hmac from a given hash type, secret, and message
 
         Args:
@@ -238,20 +172,20 @@ class Credentials(object):
         """
         return hmac.new(key=self.bytes_from_input(secret), msg=self.bytes_from_input(message), digestmod=self.hash_method).digest()
 
-    def compare_hmac(self, hmac_string, secret, message):
+    def compare_hmac(self, hmac_string: str, secret: str, message):
         """Compare a provided base64 encoded hmac string with a generated hmac from the provided secret/message
 
         Args:
-            hmac_string (string): Base64 string of the hmac to compare
-            secret (string): The secret to be used to generate the hmac to compare
-            message (bytes or string): The message to use with in the hmac generation to compare
+            hmac_string (str): Base64 string of the hmac to compare
+            secret (str): The secret to be used to generate the hmac to compare
+            message (bytes or str): The message to use with in the hmac generation to compare
 
         Returns:
             bool if hmac matches or not
         """
         return hmac.compare_digest(base64.b64decode(hmac_string), self.create_hmac(secret, message))
 
-    def hmac_message_string(self, http_verb, path, timestamp, content_type='', content=''):
+    def hmac_message_string(self, http_verb: str, path: str, timestamp: str, content_type: str = '', content=''):
         """Generate the HMAC message string given the appropriate inputs
 
         Args:
@@ -268,7 +202,7 @@ class Credentials(object):
                                                self.dragonchain_id, timestamp, content_type,
                                                self.bytes_to_b64_str(self.hash_input(content)))
 
-    def get_authorization(self, http_verb, path, timestamp, content_type='', content=''):
+    def get_authorization(self, http_verb: str, path: str, timestamp: str, content_type: str = '', content=''):
         """Create an authorization header for making requests to a Dragonchain
 
         Args:
@@ -287,19 +221,3 @@ class Credentials(object):
         hmac = self.bytes_to_b64_str(self.create_hmac(self.auth_key, message_string))
         logger.debug('Generated Base64 HMAC string: {}'.format(hmac))
         return 'DC1-HMAC-{} {}:{}'.format(self.algorithm, self.auth_key_id, hmac)
-
-    @staticmethod
-    def get_credential_file_path():
-        """Get the path for the credential file depending on the OS
-
-        Returns:
-            String of the credential file path
-        """
-        if os.name == 'nt':
-            logger.debug('Windows OS detected')
-            path = os.path.join(os.path.expandvars('%LOCALAPPDATA%'), 'dragonchain', 'credentials')
-        else:
-            logger.debug('Posix OS detected')
-            path = os.path.join(os.path.expanduser("~"), '.dragonchain', 'credentials')
-        logger.debug('Credentials file path: {}'.format(path))
-        return path
