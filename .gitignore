@@ -60,6 +60,7 @@ desktop.ini
 .vs
 
 # Autodocs
+.directory
 _build
 .build
 .static

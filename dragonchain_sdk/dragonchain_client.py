@@ -46,7 +46,7 @@ class Client(object):
             update_endpoint (bool, optional): If endpoint should automatically be updated for a new dragonchain_id
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             None, sets instance variables on credentials service
@@ -78,8 +78,8 @@ class Client(object):
             secret_name (str): name of the secret to retrieve
 
         Raises:
-            TypeError with bad parameter types
-            RuntimeError if not running in a smart contract environment
+            TypeError: with bad parameter types
+            RuntimeError: if not running in a smart contract environment
 
         Returns:
             String of the value of the specified secret
@@ -122,7 +122,7 @@ class Client(object):
             txn_type (str, exclusive): Name of the contract to get
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             The contract returned from the request
@@ -156,7 +156,7 @@ class Client(object):
             auth (str, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Success or failure object
@@ -220,7 +220,7 @@ class Client(object):
             auth (str, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Success or failure object
@@ -281,7 +281,7 @@ class Client(object):
             contract_id (str): Transaction type of the contract to delete
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             The results of the delete request
@@ -312,7 +312,7 @@ class Client(object):
             txn_id (str): ID of the transaction to get (should be a UUID)
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             The transaction searched for
@@ -341,7 +341,7 @@ class Client(object):
             txn_list (list): List of transaction dictionaries. Schema: ``{'txn_type': 'str', 'payload': 'str or dict', 'tag': 'str (optional)'}``
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             List of succeeded transaction id's and list of failed transactions
@@ -380,7 +380,7 @@ class Client(object):
             block_id (str, int): ID of the block to get
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             The block which was retrieved from the chain
@@ -397,7 +397,7 @@ class Client(object):
             level (str, int, optional): Level of verifications to get (valid values are 2, 3, 4 and 5)
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Higher level block verifications
@@ -421,7 +421,7 @@ class Client(object):
             sc_id (str, optional): The ID of the smart contract, optional if called from within a smart contract
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             The value of the object in the heap
@@ -443,8 +443,8 @@ class Client(object):
             folder (str, optional): the folder to list in the heap. If not provided, it will default to the root of the heap
 
         Raises:
-            TypeError with bad parameter types
-            ValueError with bad parameter values
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
 
         Returns:
             Parsed json response from the chain
@@ -474,6 +474,7 @@ class Client(object):
                 ETC_MORDEN
 
             transaction (dict): A dictionary representing the transaction to create
+
                 BTC: {
                     "outputs": (array of {'to': str, 'value': float}, optional)
                     "fee": (optional, int) fee to pay in satoshis/byte. If not supplied, it will be estimated for you.
@@ -492,8 +493,8 @@ class Client(object):
                 }
 
         Raises:
-            TypeError with bad parameter types
-            ValueError with bad parameter values
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
 
         Returns:
             The built and signed transaction
@@ -527,7 +528,7 @@ class Client(object):
             transaction_type (str): transaction_type to retrieve data for
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             parsed json response of the transaction type or None
@@ -552,7 +553,7 @@ class Client(object):
             custom_indexes (list): custom_indexes to update
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -574,7 +575,7 @@ class Client(object):
             custom_indexes (list): custom_indexes to update
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -595,7 +596,7 @@ class Client(object):
             transaction_type (str): transaction_type to delete
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Parsed json with success message
@@ -614,7 +615,7 @@ def _build_transaction_dict(txn_type: str, payload, tag: str = None):
         tag (str, optional): The intended tag for this transaction
 
     Raises:
-        TypeError with bad parameter types
+        TypeError: with bad parameter types
 
     Returns:
         List of succeeded transaction id's and list of failed transactions

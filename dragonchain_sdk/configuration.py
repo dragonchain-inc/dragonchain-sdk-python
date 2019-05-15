@@ -23,7 +23,7 @@ def get_dragonchain_id():
     """Get the dragonchain id if not provided. First checks environment, then configuration files
 
     Raises:
-        DragonchainIdentityNotFound if no dragonchain ID is found
+        DragonchainIdentityNotFound: if no dragonchain ID is found
 
     Returns:
         Default dragonchain id string if found
@@ -49,7 +49,7 @@ def get_endpoint(dragonchain_id: str):
         dragonchain_id (str): The dragonchain id to fetch the endpoint for
 
     Raises:
-        DragonchainIdentityNotFound if endpoint cannot be found
+        DragonchainIdentityNotFound: if endpoint cannot be found
 
     Returns:
         None, sets the class auth_key and auth_key_id instance variables
@@ -75,7 +75,7 @@ def get_credentials(dragonchain_id: str):
         dragonchain_id (str): The dragonchain id to fetch credentials keys for
 
     Raises:
-        DragonchainIdentityNotFound if credentials can't be found for a given chain
+        DragonchainIdentityNotFound: if credentials can't be found for a given chain
 
     Returns:
         Tuple of strings where index 0 is the auth_key_id and index 1 is the auth_key
@@ -129,7 +129,7 @@ def _get_endpoint_from_remote(dragonchain_id: str):
         dragonchain_id (str): The dragonchain id to get the endpoint for
 
     Raises:
-        MatchmakingException with any non-200 response from matchmaking, or any errors to communicate
+        MatchmakingException: with any non-200 response from matchmaking, or any errors to communicate
 
     Returns:
         String of endpoint from remote service if found

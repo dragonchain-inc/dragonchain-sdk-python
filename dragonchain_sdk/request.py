@@ -40,7 +40,7 @@ class Request(object):
         verify (bool, optional): Boolean indicating whether to validate the SSL certificate of the endpoint when making requests
 
     Raises:
-        TypeError with bad parameter types
+        TypeError: with bad parameter types
 
     Returns:
         A new Request object.
@@ -66,7 +66,7 @@ class Request(object):
             endpoint (str, optional): Endpoint to set. Will auto-generate based on credentials dragonchain_id if not provided
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             None, sets the endpoint of this Request instance
@@ -152,8 +152,8 @@ class Request(object):
             http_verb (str): the type of http request to make (GET, POST, etc)
 
         Raises:
-            TypeError with bad parameter types
-            ValueError with bad parameter values
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
 
         Returns:
             appropriate requests http method
@@ -172,7 +172,7 @@ class Request(object):
             query_dict (dict): dict of parameters to use in the query string
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             query string to use in an HTTP request path
@@ -198,7 +198,7 @@ class Request(object):
             limit (int): pagination limit
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             Query string to include in request path
@@ -228,7 +228,7 @@ class Request(object):
             authorization (str, optional): authorization header to include with the request
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             dict of headers to use with the request
@@ -260,10 +260,10 @@ class Request(object):
             parse_response (bool, optional): if the return from the chain should be parsed as json
 
         Raises:
-            TypeError with bad parameter types
-            ValueError with bad parameter values
-            ConnectionException when unable to communicate with the dragonchain
-            UnexpectedResponseException when the dragonchain responds with an unexpected payload
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
+            ConnectionException: when unable to communicate with the dragonchain
+            UnexpectedResponseException: when the dragonchain responds with an unexpected payload
 
         Returns:
             Dictionary where status is the HTTP status code, response is the return body from the chain, and ok is a boolean if the status code was in the 2XX range

@@ -29,7 +29,7 @@ class Credentials(object):
         algorithm (str, optional): The hash algorithm to use with the HMAC authentication scheme (SHA256 | BLAKE2b512 | SHA3-256)
 
     Raises:
-        TypeError with bad parameter types
+        TypeError: with bad parameter types
 
     Returns:
         A new Credentials object.
@@ -66,7 +66,7 @@ class Credentials(object):
             algorithm (str): The algorithm to use. Valid options are BLAKE2b512, SHA256, or SHA3-256
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             None, sets the HMAC signing algorithm for this credential instance
@@ -85,7 +85,7 @@ class Credentials(object):
             algorithm (str): The algorithm to use. Valid options are BLAKE2b512, SHA256, or SHA3-256
 
         Raises:
-            NotImplementedError when provided algorithm is not supported
+            NotImplementedError: when provided algorithm is not supported
 
         Returns
             hashlib interface compatible hash method
@@ -106,7 +106,7 @@ class Credentials(object):
             unencoded_bytes (bytes): Python bytes object to encode
 
         Raises:
-            TypeError with bad parameter types
+            TypeError: with bad parameter types
 
         Returns:
             String of the base64 encoded bytes
@@ -122,8 +122,8 @@ class Credentials(object):
             input_data (bytes or str): input to process
 
         Raises:
-            TypeError with bad parameter types
-            ValueError with bad parameter values
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
 
         Returns:
             bytes object representation of input
