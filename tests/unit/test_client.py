@@ -14,7 +14,7 @@ import logging
 import dragonchain_sdk
 from unittest import TestCase
 from mock import patch, MagicMock
-from dragonchain_sdk.dragonchain_client import Client
+from dragonchain_sdk.dragonchain_client import Client, _build_transaction_dict
 
 
 @patch('dragonchain_sdk.dragonchain_client.Credentials')
@@ -114,15 +114,15 @@ class TestClientInitialization(TestCase):
 @patch('dragonchain_sdk.dragonchain_client.Request')
 @patch('dragonchain_sdk.dragonchain_client.Credentials')
 class TestClientMehods(TestCase):
-    def test_build_transaction_dict_raises_type_error(self, mock_creds, mock_request):
-        self.assertRaises(TypeError, Client.build_transaction_dict, {}, {'fake': 'payload'}, 'Tag:"value"')
-        self.assertRaises(TypeError, Client.build_transaction_dict, 'FAKETXN', [], 'Tag:"value"')
-        self.assertRaises(TypeError, Client.build_transaction_dict, 'FAKETXN', {'fake': 'payload'}, {})
+    def test__build_transaction_dict_raises_type_error(self, mock_creds, mock_request):
+        self.assertRaises(TypeError, _build_transaction_dict, {}, {'fake': 'payload'}, 'Tag:"value"')
+        self.assertRaises(TypeError, _build_transaction_dict, 'FAKETXN', [], 'Tag:"value"')
+        self.assertRaises(TypeError, _build_transaction_dict, 'FAKETXN', {'fake': 'payload'}, {})
         mock_creds.assert_not_called()
         mock_request.assert_not_called()
 
-    def test_build_transaction_dict_returns_dict(self, mock_creds, mock_request):
-        self.assertEqual(Client.build_transaction_dict('FAKETXN', {}, 'Tag:"value"'), {
+    def test__build_transaction_dict_returns_dict(self, mock_creds, mock_request):
+        self.assertEqual(_build_transaction_dict('FAKETXN', {}, 'Tag:"value"'), {
             'version': '1',
             'txn_type': 'FAKETXN',
             'payload': {},
@@ -131,8 +131,8 @@ class TestClientMehods(TestCase):
         mock_creds.assert_not_called()
         mock_request.assert_not_called()
 
-    def test_build_transaction_dict_returns_dict_no_tag(self, mock_creds, mock_request):
-        self.assertEqual(Client.build_transaction_dict('FAKETXN', {}), {
+    def test__build_transaction_dict_returns_dict_no_tag(self, mock_creds, mock_request):
+        self.assertEqual(_build_transaction_dict('FAKETXN', {}), {
             'version': '1',
             'txn_type': 'FAKETXN',
             'payload': {}
