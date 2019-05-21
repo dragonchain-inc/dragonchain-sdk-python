@@ -13,7 +13,7 @@ from dragonchain_sdk.dragonchain_client import Client
 import logging
 
 __author__ = 'Dragonchain'
-__version__ = '2.0.3'
+__version__ = '3.0.0'
 
 
 def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string=None):
@@ -39,9 +39,21 @@ def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string
     logger.addHandler(handler)
 
 
-def client(*args, **kwargs):
-    """Create a client for interacting with a Dragonchain. See ``dragonchain_sdk.dragonchain_client.Client`` for parameters."""
-    return Client(*args, **kwargs)
+def create_client(dragonchain_id: str = None, auth_key_id: str = None, auth_key: str = None, endpoint: str = None, verify: bool = True, algorithm: str = 'SHA256'):
+    """Construct a new ``Client`` object
+
+    Args:
+        dragonchain_id (str, optional): The ID of the chain to connect to.
+        auth_key_id (str, optional): The authorization key ID
+        auth_key (str, optional): The authorization key
+        endpoint (str, optional): The endpoint of the Dragonchain
+        verify (bool, optional): Verify the TLS cert of the Dragonchain
+        algorithm (str, optional): The hashing algorithm used for HMAC authentication
+
+    Returns:
+        A new Dragonchain client.
+    """
+    return Client(dragonchain_id, auth_key_id, auth_key, endpoint, verify, algorithm)
 
 
 logging.getLogger('dragonchain_sdk').addHandler(logging.NullHandler())
