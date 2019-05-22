@@ -4,3 +4,4 @@ dragonchain_id = TestID
 [TestID]
 auth_key = TestKey
 auth_key_id = TestKeyId
+endpoint = https://an.end.point

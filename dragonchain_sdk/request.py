@@ -14,6 +14,7 @@ import requests
 import logging
 import urllib
 from json import dumps
+from dragonchain_sdk.configuration import get_endpoint
 from dragonchain_sdk.credentials import Credentials
 from dragonchain_sdk import exceptions
 
@@ -38,10 +39,13 @@ class Request(object):
         endpoint (str, optional): The URL for the endpoint of the chain
         verify (bool, optional): Boolean indicating whether to validate the SSL certificate of the endpoint when making requests
 
+    Raises:
+        TypeError: with bad parameter types
+
     Returns:
         A new Request object.
     """
-    def __init__(self, credentials, endpoint=None, verify=True):
+    def __init__(self, credentials, endpoint: str = None, verify: bool = True):
         if isinstance(credentials, Credentials):
             self.credentials = credentials
         else:
@@ -55,24 +59,27 @@ class Request(object):
 
         self.update_endpoint(endpoint)
 
-    def update_endpoint(self, endpoint=None):
+    def update_endpoint(self, endpoint: str = None):
         """Update endpoint for this request object
 
         Args:
             endpoint (str, optional): Endpoint to set. Will auto-generate based on credentials dragonchain_id if not provided
 
+        Raises:
+            TypeError: with bad parameter types
+
         Returns:
             None, sets the endpoint of this Request instance
         """
         if endpoint is None:
-            self.endpoint = 'https://{}.api.dragonchain.com'.format(self.credentials.dragonchain_id)
+            self.endpoint = get_endpoint(self.credentials.dragonchain_id)
         elif isinstance(endpoint, str):
             self.endpoint = endpoint
         else:
             raise TypeError('Parameter "endpoint" must be of type str.')
         logger.info('Target endpoint updated to {}'.format(self.endpoint))
 
-    def get(self, path, parse_response=True):
+    def get(self, path: str, parse_response: bool = True):
         """Make a GET request to a chain
 
         Args:
@@ -87,7 +94,7 @@ class Request(object):
                                   verify=self.verify,
                                   parse_response=parse_response)
 
-    def post(self, path, body, parse_response=True):
+    def post(self, path: str, body: dict, parse_response: bool = True, additional_headers: dict = None):
         """Make a POST request to a chain
 
         Args:
@@ -98,13 +105,16 @@ class Request(object):
         Returns:
             Returns the response of the POST operation.
         """
+        if additional_headers is None:
+            additional_headers = {}
         return self._make_request(http_verb='POST',
                                   path=path,
                                   verify=self.verify,
                                   json=body,
-                                  parse_response=parse_response)
+                                  parse_response=parse_response,
+                                  additional_headers=additional_headers)
 
-    def put(self, path, body, parse_response=True):
+    def put(self, path: str, body: dict, parse_response: bool = True):
         """Make a PUT request to a chain
 
         Args:
@@ -121,7 +131,7 @@ class Request(object):
                                   json=body,
                                   parse_response=parse_response)
 
-    def delete(self, path, body, parsed_response=True):
+    def delete(self, path: str, body: dict, parsed_response: bool = True):
         """Make a DELETE request to the chain
 
         Args:
@@ -138,11 +148,15 @@ class Request(object):
                                   json=body,
                                   parse_response=parsed_response)
 
-    def get_requests_method(self, http_verb):
+    def get_requests_method(self, http_verb: str):
         """Get the appropriate requests method for a given http_verb
 
         Args:
             http_verb (str): the type of http request to make (GET, POST, etc)
+
+        Raises:
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
 
         Returns:
             appropriate requests http method
@@ -154,11 +168,14 @@ class Request(object):
             raise ValueError(http_verb + ' is an unsupported http operation.')
         return request_method
 
-    def generate_query_string(self, query_dict):
+    def generate_query_string(self, query_dict: dict):
         """Generate an http query string from a dictionary
 
         Args:
             query_dict (dict): dict of parameters to use in the query string
+
+        Raises:
+            TypeError: with bad parameter types
 
         Returns:
             query string to use in an HTTP request path
@@ -174,7 +191,7 @@ class Request(object):
             # If input is empty, return an empty string as the query string
             return ''
 
-    def get_lucene_query_params(self, query=None, sort=None, offset=0, limit=10):
+    def get_lucene_query_params(self, query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
         """Generate a lucene query param string with given inputs
 
         Args:
@@ -182,6 +199,9 @@ class Request(object):
             sort (str): sort syntax of 'field:direction' (e.g.: name:asc)
             offset (int): pagination offset of query
             limit (int): pagination limit
+
+        Raises:
+            TypeError: with bad parameter types
 
         Returns:
             Query string to include in request path
@@ -202,13 +222,16 @@ class Request(object):
             params['sort'] = sort
         return self.generate_query_string(params)
 
-    def make_headers(self, timestamp, authorization, content_type=None):
+    def make_headers(self, timestamp: str, authorization: str, content_type: str = None):
         """Create a headers dictionary to send with a request to a dragonchain
 
         Args:
             timestamp (str): unix timestamp to put for this request
             content_type (str): content_type to use for this request
-            authorization (str): authorization header to include with the request
+            authorization (str, optional): authorization header to include with the request
+
+        Raises:
+            TypeError: with bad parameter types
 
         Returns:
             dict of headers to use with the request
@@ -228,7 +251,7 @@ class Request(object):
             header_dict['Content-Type'] = content_type
         return header_dict
 
-    def _make_request(self, http_verb, path, json=None, timeout=30, verify=True, parse_response=True):
+    def _make_request(self, http_verb: str, path: str, json: dict = None, timeout: int = 30, verify: bool = True, parse_response: bool = True, additional_headers: dict = None):
         """Make an http request to a dragonchain with the given information
 
         Args:
@@ -239,6 +262,12 @@ class Request(object):
             verify (bool, optional): specify if the SSL cert of the chain should be verified
             parse_response (bool, optional): if the return from the chain should be parsed as json
 
+        Raises:
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
+            ConnectionException: when unable to communicate with the dragonchain
+            UnexpectedResponseException: when the dragonchain responds with an unexpected payload
+
         Returns:
             Dictionary where status is the HTTP status code, response is the return body from the chain, and ok is a boolean if the status code was in the 2XX range
             {
@@ -247,6 +276,8 @@ class Request(object):
                 'response': dict if parse_response, else str (actual response body from chain)
             }
         """
+        if additional_headers is None:
+            additional_headers = {}
         if not isinstance(path, str):
             raise TypeError('Parameter "path" must be of type str.')
         if not path.startswith('/'):
@@ -259,7 +290,9 @@ class Request(object):
         # Add the 'Z' manually to indicate UTC (not added by isoformat)
         timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
         authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)
+
         header_dict = self.make_headers(timestamp, authorization, content_type)
+        additional_headers.update(header_dict)
         full_url = self.endpoint + path
 
         logger.debug('Making request. Verify SSL: {}, Timeout: {}'.format(verify, timeout))
