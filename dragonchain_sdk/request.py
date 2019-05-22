@@ -94,7 +94,7 @@ class Request(object):
                                   verify=self.verify,
                                   parse_response=parse_response)
 
-    def post(self, path: str, body: dict, parse_response: bool = True):
+    def post(self, path: str, body: dict, parse_response: bool = True, additional_headers: dict = None):
         """Make a POST request to a chain
 
         Args:
@@ -105,11 +105,14 @@ class Request(object):
         Returns:
             Returns the response of the POST operation.
         """
+        if additional_headers is None:
+            additional_headers = {}
         return self._make_request(http_verb='POST',
                                   path=path,
                                   verify=self.verify,
                                   json=body,
-                                  parse_response=parse_response)
+                                  parse_response=parse_response,
+                                  additional_headers=additional_headers)
 
     def put(self, path: str, body: dict, parse_response: bool = True):
         """Make a PUT request to a chain
@@ -248,7 +251,7 @@ class Request(object):
             header_dict['Content-Type'] = content_type
         return header_dict
 
-    def _make_request(self, http_verb: str, path: str, json: dict = None, timeout: int = 30, verify: bool = True, parse_response: bool = True):
+    def _make_request(self, http_verb: str, path: str, json: dict = None, timeout: int = 30, verify: bool = True, parse_response: bool = True, additional_headers: dict = None):
         """Make an http request to a dragonchain with the given information
 
         Args:
@@ -273,6 +276,8 @@ class Request(object):
                 'response': dict if parse_response, else str (actual response body from chain)
             }
         """
+        if additional_headers is None:
+            additional_headers = {}
         if not isinstance(path, str):
             raise TypeError('Parameter "path" must be of type str.')
         if not path.startswith('/'):
@@ -285,7 +290,9 @@ class Request(object):
         # Add the 'Z' manually to indicate UTC (not added by isoformat)
         timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
         authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)
+
         header_dict = self.make_headers(timestamp, authorization, content_type)
+        additional_headers.update(header_dict)
         full_url = self.endpoint + path
 
         logger.debug('Making request. Verify SSL: {}, Timeout: {}'.format(verify, timeout))
