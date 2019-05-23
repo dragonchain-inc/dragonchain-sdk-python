@@ -574,13 +574,13 @@ class TestClientMehods(TestCase):
     def test_create_transaction_type_calls_post(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction_type('MyNewType')
-        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "transaction_type": "MyNewType"})
+        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType"})
 
     def test_create_transaction_type_calls_post_with_custom_indexes(self, mock_creds, mock_request):
         custom_indexes = [{"key": "name", "path": "body.name"}]
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction_type('MyNewType', custom_indexes)
-        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "transaction_type": "MyNewType", "custom_indexes": custom_indexes})
+        self.client.request.post.assert_called_once_with('/transaction-type', {"version": "1", "txn_type": "MyNewType", "custom_indexes": custom_indexes})
 
     def test_create_transaction_type_raises_error_type_is_not_string(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
