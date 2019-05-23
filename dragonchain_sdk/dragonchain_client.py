@@ -667,7 +667,7 @@ class Client(object):
             raise TypeError('Parameter "transaction_type" must be of type str.')
         if custom_indexes and not isinstance(custom_indexes, list):
             raise TypeError('Parameter "custom_indexes" must be of type list.')
-        params = {"version": "1", "transaction_type": transaction_type}
+        params = {'version': '1', 'txn_type': transaction_type}
         if custom_indexes:
             params['custom_indexes'] = custom_indexes
         return self.request.post('/transaction-type', params)
