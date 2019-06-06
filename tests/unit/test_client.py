@@ -688,12 +688,12 @@ class TestClientMehods(unittest.TestCase):
     def test_create_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_api_key()
-        self.client.request.post.assert_called_once_with('/api-key', {})
+        self.client.request.post.assert_called_once_with("/api-key", {})
 
     def test_delete_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
-        self.client.delete_api_key('MyKeyID')
-        self.client.request.delete.assert_called_once_with('/api-key/MyKeyID')
+        self.client.delete_api_key("MyKeyID")
+        self.client.request.delete.assert_called_once_with("/api-key/MyKeyID")
 
     def test_delete_api_key_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -701,8 +701,8 @@ class TestClientMehods(unittest.TestCase):
 
     def test_get_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
-        self.client.get_api_key('MyKeyID')
-        self.client.request.get.assert_called_once_with('/api-key/MyKeyID')
+        self.client.get_api_key("MyKeyID")
+        self.client.request.get.assert_called_once_with("/api-key/MyKeyID")
 
     def test_get_api_key_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -711,7 +711,7 @@ class TestClientMehods(unittest.TestCase):
     def test_list_api_keys(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_api_keys()
-        self.client.request.get.assert_called_once_with('/api-key')
+        self.client.request.get.assert_called_once_with("/api-key")
 
     def test_create_ethereum_transaction_throws_value_error_on_invalid_network(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
