@@ -1,10 +1,15 @@
-requests
-requests_mock
+requests>=2.4.0
 mock
+requests_mock
 coverage
 setuptools
 wheel
+pep8-naming
 flake8
+flake8-comprehensions
+flake8-assertive
+flake8-builtins
+flake8-import-order
 bandit
 sphinx
 twine

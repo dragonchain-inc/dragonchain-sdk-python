@@ -7,6 +7,9 @@
 .. image:: https://pypip.in/v/dragonchain-sdk/badge.png
    :target: https://pypi.org/project/dragonchain-sdk/
    :alt: Latest PyPI version
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/python/black
+   :alt: Code Style Black
 
 Intro
 -----
