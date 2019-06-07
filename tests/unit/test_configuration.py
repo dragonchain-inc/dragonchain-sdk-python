@@ -10,17 +10,17 @@
 # limitations under the License.
 
 import os
-import sys
 import unittest
 import configparser
 
 import requests
 import requests_mock
 
+from tests import unit
 from dragonchain_sdk import configuration
 from dragonchain_sdk import exceptions
 
-if sys.version_info >= (3, 6):
+if unit.PY36:
     from unittest.mock import patch
 else:
     from mock import patch

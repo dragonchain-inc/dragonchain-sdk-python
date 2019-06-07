@@ -10,13 +10,13 @@
 # limitations under the License.
 
 import os
-import sys
 import hashlib
 import unittest
 
+from tests import unit
 from dragonchain_sdk import credentials
 
-if sys.version_info >= (3, 6):
+if unit.PY36:
     from unittest.mock import patch
 else:
     from mock import patch
@@ -44,17 +44,17 @@ class TestCredentialsInitialization(unittest.TestCase):
         self.assertEqual(test_credentials.algorithm, "SHA256")
         self.assertEqual(test_credentials.hash_method, hashlib.sha256)
 
-    if sys.version_info >= (3, 6):
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_get_correct_hash_algorithm_blake2b(self):
+        test_credentials = credentials.Credentials(dragonchain_id="test", auth_key="test", auth_key_id="test", algorithm="BLAKE2b512")
+        self.assertEqual(test_credentials.algorithm, "BLAKE2b512")
+        self.assertEqual(test_credentials.hash_method, hashlib.blake2b)
 
-        def test_get_correct_hash_algorithm_blake2b(self):
-            test_credentials = credentials.Credentials(dragonchain_id="test", auth_key="test", auth_key_id="test", algorithm="BLAKE2b512")
-            self.assertEqual(test_credentials.algorithm, "BLAKE2b512")
-            self.assertEqual(test_credentials.hash_method, hashlib.blake2b)
-
-        def test_get_correct_hash_algorithm_sha3_256(self):
-            test_credentials = credentials.Credentials(dragonchain_id="test", auth_key="test", auth_key_id="test", algorithm="SHA3-256")
-            self.assertEqual(test_credentials.algorithm, "SHA3-256")
-            self.assertEqual(test_credentials.hash_method, hashlib.sha3_256)
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_get_correct_hash_algorithm_sha3_256(self):
+        test_credentials = credentials.Credentials(dragonchain_id="test", auth_key="test", auth_key_id="test", algorithm="SHA3-256")
+        self.assertEqual(test_credentials.algorithm, "SHA3-256")
+        self.assertEqual(test_credentials.hash_method, hashlib.sha3_256)
 
 
 class TestCredentialsMethods(unittest.TestCase):
@@ -70,7 +70,7 @@ class TestCredentialsMethods(unittest.TestCase):
     def test_get_hash_method_raises_not_implemented_error(self):
         self.assertRaises(NotImplementedError, self.credentials.get_hash_method, "not_implemented")
 
-    @patch("sys.version_info", (3, 5))
+    @patch("sys.version_info", (3, 5, 0))
     def test_get_hash_method_raises_not_implemented_error_legacy(self):
         self.assertRaises(NotImplementedError, self.credentials.get_hash_method, "SHA3-256")
 
@@ -101,69 +101,69 @@ class TestCredentialsMethods(unittest.TestCase):
             b"+\xe3[\xc6q\xdc\x91.\x7fT\x0f\x0eZ.\x91^\xf6\xa4\xa4\xdb\xd2\xad\xa5\xba\x9c\x1d+\x11{\xfc\x90|",
         )
 
-    if sys.version_info >= (3, 6):
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_hash_input_blake2b(self):
+        self.credentials.update_algorithm("BLAKE2b512")
+        self.assertEqual(
+            self.credentials.hash_input("some input"),
+            b'k\xd3_\x97J/\x0e\x93_\xa1\x15(\xbf"\xab\xb5\xb6\x9f\x9d\xee8\xed\xf6\xc2RX\xea<\xb4\xee\x03:|a@\xd8\x9f\xab\xa6\x06\x89r\x8fa-]\xf7\xda\xb9=\xa7\xd0z\xe6XB\xae$\xd0\x1fP\xa2+\xa9',  # noqa: B950
+        )
 
-        def test_hash_input_blake2b(self):
-            self.credentials.update_algorithm("BLAKE2b512")
-            self.assertEqual(
-                self.credentials.hash_input("some input"),
-                b'k\xd3_\x97J/\x0e\x93_\xa1\x15(\xbf"\xab\xb5\xb6\x9f\x9d\xee8\xed\xf6\xc2RX\xea<\xb4\xee\x03:|a@\xd8\x9f\xab\xa6\x06\x89r\x8fa-]\xf7\xda\xb9=\xa7\xd0z\xe6XB\xae$\xd0\x1fP\xa2+\xa9',  # noqa: B950
-            )
-
-        def test_hash_input_sha3_256(self):
-            self.credentials.update_algorithm("SHA3-256")
-            self.assertEqual(
-                self.credentials.hash_input("some input"),
-                b"\x18\xd6@c\x0b\xbe\xc8`\xdb@t\x1e\xf2\xd65g\xe2Z\x04\x90\xac\xc3\x9f\xf1\xceC\xee\xde\xf4\xb1\xe7x",
-            )
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_hash_input_sha3_256(self):
+        self.credentials.update_algorithm("SHA3-256")
+        self.assertEqual(
+            self.credentials.hash_input("some input"),
+            b"\x18\xd6@c\x0b\xbe\xc8`\xdb@t\x1e\xf2\xd65g\xe2Z\x04\x90\xac\xc3\x9f\xf1\xceC\xee\xde\xf4\xb1\xe7x",
+        )
 
     def test_create_hmac_sha256(self):
         encoded_hmac = self.credentials.bytes_to_b64_str(self.credentials.create_hmac("12345", "message"))
         self.assertEqual(encoded_hmac, "aaIguQeFQUkVBw64VUJQWmzzIweD5zf+NVpuwfwexBA=")
 
-    if sys.version_info >= (3, 6):
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_create_hmac_blake2b(self):
+        self.credentials.update_algorithm("BLAKE2b512")
+        encoded_hmac = self.credentials.bytes_to_b64_str(self.credentials.create_hmac("12345", "message"))
+        self.assertEqual(encoded_hmac, "jMErAWFbeKCDRPGFhxCL+xYsjYP4SDIUXlDpXhmQ9VZ4jCIMFzQ1ksnR7hf+pkcr56QY8Hm16sTTv+g29jRXew==")
 
-        def test_create_hmac_blake2b(self):
-            self.credentials.update_algorithm("BLAKE2b512")
-            encoded_hmac = self.credentials.bytes_to_b64_str(self.credentials.create_hmac("12345", "message"))
-            self.assertEqual(encoded_hmac, "jMErAWFbeKCDRPGFhxCL+xYsjYP4SDIUXlDpXhmQ9VZ4jCIMFzQ1ksnR7hf+pkcr56QY8Hm16sTTv+g29jRXew==")
-
-        def test_create_hmac_sha3_256(self):
-            self.credentials.update_algorithm("SHA3-256")
-            encoded_hmac = self.credentials.bytes_to_b64_str(self.credentials.create_hmac("12345", "message"))
-            self.assertEqual(encoded_hmac, "EhPxZsdSWbv6ekuJvXv+nPIPdaZVdOIxXXLfvOvJlSw=")
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_create_hmac_sha3_256(self):
+        self.credentials.update_algorithm("SHA3-256")
+        encoded_hmac = self.credentials.bytes_to_b64_str(self.credentials.create_hmac("12345", "message"))
+        self.assertEqual(encoded_hmac, "EhPxZsdSWbv6ekuJvXv+nPIPdaZVdOIxXXLfvOvJlSw=")
 
     def test_compare_hmac_sha256(self):
         encoded_hmac = "aaIguQeFQUkVBw64VUJQWmzzIweD5zf+NVpuwfwexBA="
         self.assertTrue(self.credentials.compare_hmac(encoded_hmac, "12345", "message"))
 
-    if sys.version_info >= (3, 6):
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_compare_hmac_blake2b(self):
+        self.credentials.update_algorithm("BLAKE2b512")
+        encoded_hmac = "jMErAWFbeKCDRPGFhxCL+xYsjYP4SDIUXlDpXhmQ9VZ4jCIMFzQ1ksnR7hf+pkcr56QY8Hm16sTTv+g29jRXew=="
+        self.assertTrue(self.credentials.compare_hmac(encoded_hmac, "12345", "message"))
 
-        def test_compare_hmac_blake2b(self):
-            self.credentials.update_algorithm("BLAKE2b512")
-            encoded_hmac = "jMErAWFbeKCDRPGFhxCL+xYsjYP4SDIUXlDpXhmQ9VZ4jCIMFzQ1ksnR7hf+pkcr56QY8Hm16sTTv+g29jRXew=="
-            self.assertTrue(self.credentials.compare_hmac(encoded_hmac, "12345", "message"))
-
-        def test_compare_hmac_sha3_256(self):
-            self.credentials.update_algorithm("SHA3-256")
-            encoded_hmac = "EhPxZsdSWbv6ekuJvXv+nPIPdaZVdOIxXXLfvOvJlSw="
-            self.assertTrue(self.credentials.compare_hmac(encoded_hmac, "12345", "message"))
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_compare_hmac_sha3_256(self):
+        self.credentials.update_algorithm("SHA3-256")
+        encoded_hmac = "EhPxZsdSWbv6ekuJvXv+nPIPdaZVdOIxXXLfvOvJlSw="
+        self.assertTrue(self.credentials.compare_hmac(encoded_hmac, "12345", "message"))
 
     def test_get_authorization_sha256(self):
         kwargs = {"http_verb": "get", "path": "/chain/transaction", "timestamp": "2017-06-10T20:40:05.191023Z", "content_type": "", "content": ""}
         self.assertEqual(self.credentials.get_authorization(**kwargs), "DC1-HMAC-SHA256 TestKeyId:4RDAxss7zb3p0nZKzpCM3dNNb3UhdeIU6Aen1Jp84Eo=")
 
-    if sys.version_info >= (3, 6):
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_get_authorization_blake2b(self):
+        kwargs = {"http_verb": "get", "path": "/chain/transaction", "timestamp": "2017-06-10T20:40:05.191023Z", "content_type": "", "content": ""}
+        self.credentials.update_algorithm("BLAKE2b512")
+        self.assertEqual(
+            self.credentials.get_authorization(**kwargs),
+            "DC1-HMAC-BLAKE2b512 TestKeyId:iRH9Z2/rMpqEiAHFKuRcfUnwlng3PBTCqUylUAJYNMkux0FUNnq37JemDnYlAA9lIYVI9JIVIvckTSVH3odnOg==",
+        )
 
-        def test_get_authorization_blake2b(self):
-            kwargs = {"http_verb": "get", "path": "/chain/transaction", "timestamp": "2017-06-10T20:40:05.191023Z", "content_type": "", "content": ""}
-            self.credentials.update_algorithm("BLAKE2b512")
-            self.assertEqual(
-                self.credentials.get_authorization(**kwargs),
-                "DC1-HMAC-BLAKE2b512 TestKeyId:iRH9Z2/rMpqEiAHFKuRcfUnwlng3PBTCqUylUAJYNMkux0FUNnq37JemDnYlAA9lIYVI9JIVIvckTSVH3odnOg==",
-            )
-
-        def test_get_authorization_sha3_256(self):
-            kwargs = {"http_verb": "get", "path": "/chain/transaction", "timestamp": "2017-06-10T20:40:05.191023Z", "content_type": "", "content": ""}
-            self.credentials.update_algorithm("SHA3-256")
-            self.assertEqual(self.credentials.get_authorization(**kwargs), "DC1-HMAC-SHA3-256 TestKeyId:SNZShngIKiYqyDriAUoqwaxAj4JtQ7kxZDc/V8Um4Z4=")
+    @unittest.skipUnless(unit.PY36, "This only works on python 3.6 or greater")
+    def test_get_authorization_sha3_256(self):
+        kwargs = {"http_verb": "get", "path": "/chain/transaction", "timestamp": "2017-06-10T20:40:05.191023Z", "content_type": "", "content": ""}
+        self.credentials.update_algorithm("SHA3-256")
+        self.assertEqual(self.credentials.get_authorization(**kwargs), "DC1-HMAC-SHA3-256 TestKeyId:SNZShngIKiYqyDriAUoqwaxAj4JtQ7kxZDc/V8Um4Z4=")

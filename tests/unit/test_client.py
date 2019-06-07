@@ -10,14 +10,15 @@
 # limitations under the License.
 
 import os
-import sys
 import logging
 import unittest
+import importlib
 
+from tests import unit
 import dragonchain_sdk
 from dragonchain_sdk import dragonchain_client
 
-if sys.version_info >= (3, 6):
+if unit.PY36:
     from unittest.mock import patch, MagicMock, ANY
 else:
     from mock import patch, MagicMock, ANY
@@ -26,6 +27,11 @@ else:
 @patch("dragonchain_sdk.dragonchain_client.credentials")
 @patch("dragonchain_sdk.dragonchain_client.request")
 class TestClientInitialization(unittest.TestCase):
+    @unittest.skipUnless(unit.CI_COVERAGE_VERSION, "Only run this test for code coverage purposes")
+    @patch("typing.TYPE_CHECKING", True)
+    def test_type_checking(self, mock_request, mock_creds):
+        importlib.reload(dragonchain_client)
+
     def test_create_client_initializes_correctly_from_module(self, mock_request, mock_creds):
         self.client = dragonchain_sdk.create_client()
         mock_creds.Credentials.assert_called_once_with(None, None, None, "SHA256")

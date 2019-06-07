@@ -97,7 +97,7 @@ class Credentials(object):
         """
         if algorithm == "SHA256":
             return hashlib.sha256
-        if sys.version_info >= (3, 6):
+        if sys.version_info[:2] >= (3, 6):
             if algorithm == "BLAKE2b512":
                 return hashlib.blake2b
             elif algorithm == "SHA3-256":

@@ -9,17 +9,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import unittest
+import importlib
 
 import requests
 import requests_mock
 
+from tests import unit
 from dragonchain_sdk import request
 from dragonchain_sdk import credentials
 from dragonchain_sdk import exceptions
 
-if sys.version_info >= (3, 6):
+if unit.PY36:
     from unittest.mock import patch, MagicMock
 else:
     from mock import patch, MagicMock
@@ -28,6 +29,11 @@ else:
 class TestRequestsInitialization(unittest.TestCase):
     def setUp(self):
         self.creds = credentials.Credentials(dragonchain_id="TestID", auth_key="TestKey", auth_key_id="TestKeyId")
+
+    @unittest.skipUnless(unit.CI_COVERAGE_VERSION, "Only run this test for code coverage purposes")
+    @patch("typing.TYPE_CHECKING", True)
+    def test_type_checking(self):
+        importlib.reload(request)
 
     def test_initialization_throws_type_error(self):
         self.assertRaises(TypeError, request.Request, "not a credentials service")
