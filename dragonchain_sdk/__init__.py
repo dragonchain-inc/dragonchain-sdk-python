@@ -9,14 +9,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dragonchain_sdk.dragonchain_client import Client
 import logging
+from typing import Optional
 
-__author__ = 'Dragonchain'
-__version__ = '3.0.1'
+from dragonchain_sdk import dragonchain_client
+
+__author__ = "Dragonchain"
+__version__ = "3.0.2"
 
 
-def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string=None):
+def set_stream_logger(name="dragonchain_sdk", level=logging.DEBUG, format_string=None):
     """Set a stream logger for a module. You can set name to ``''`` to log everything.
 
     Args:
@@ -28,7 +30,7 @@ def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string
         None, sets a stream logger
     """
     if format_string is None:
-        format_string = '%(asctime)s %(name)s [%(levelname)s] %(message)s'
+        format_string = "%(asctime)s %(name)s [%(levelname)s] %(message)s"
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -39,7 +41,14 @@ def set_stream_logger(name='dragonchain_sdk', level=logging.DEBUG, format_string
     logger.addHandler(handler)
 
 
-def create_client(dragonchain_id: str = None, auth_key_id: str = None, auth_key: str = None, endpoint: str = None, verify: bool = True, algorithm: str = 'SHA256'):
+def create_client(
+    dragonchain_id: Optional[str] = None,
+    auth_key_id: Optional[str] = None,
+    auth_key: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    verify: bool = True,
+    algorithm: str = "SHA256",
+):
     """Construct a new ``Client`` object
 
     Args:
@@ -53,7 +62,7 @@ def create_client(dragonchain_id: str = None, auth_key_id: str = None, auth_key:
     Returns:
         A new Dragonchain client.
     """
-    return Client(dragonchain_id, auth_key_id, auth_key, endpoint, verify, algorithm)
+    return dragonchain_client.Client(dragonchain_id, auth_key_id, auth_key, endpoint, verify, algorithm)
 
 
-logging.getLogger('dragonchain_sdk').addHandler(logging.NullHandler())
+logging.getLogger("dragonchain_sdk").addHandler(logging.NullHandler())

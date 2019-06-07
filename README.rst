@@ -1,12 +1,21 @@
+.. image:: https://img.shields.io/pypi/v/dragonchain-sdk.svg
+   :target: https://pypi.org/project/dragonchain-sdk/
+   :alt: Latest PyPI version
 .. image:: https://travis-ci.org/dragonchain-inc/dragonchain-sdk-python.svg?branch=master
    :target: https://travis-ci.org/dragonchain-inc/dragonchain-sdk-python
    :alt: Build Status
 .. image:: https://api.codeclimate.com/v1/badges/d9ab43d29af318ec4121/test_coverage
    :target: https://codeclimate.com/github/dragonchain-inc/dragonchain-sdk-python/test_coverage
    :alt: Test Coverage
-.. image:: https://pypip.in/v/dragonchain-sdk/badge.png
-   :target: https://pypi.org/project/dragonchain-sdk/
-   :alt: Latest PyPI version
+.. image:: https://img.shields.io/pypi/pyversions/dragonchain-sdk.svg
+   :target: https://github.com/dragonchain-inc/dragonchain-sdk-python/
+   :alt: Python Version Support
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/python/black
+   :alt: Code Style Black
+.. image:: https://img.shields.io/pypi/l/dragonchain-sdk.svg
+   :target: https://github.com/dragonchain-inc/dragonchain-sdk-python/blob/master/LICENSE
+   :alt: License
 
 Intro
 -----

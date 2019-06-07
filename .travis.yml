@@ -13,12 +13,12 @@ matrix:
     - python: 3.7
       dist: xenial
 install:
-  - ./run.sh install-req
+  - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./run.sh install-req; else ./run.sh install-req skip-extras; fi
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script:
-  - ./run.sh full-build
+  - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./run.sh full-build; else ./run.sh full-build no-format; fi
 after_script:
-  - if [[ $TRAVIS_PYTHON_VERSION == 3.7 ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
+  - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi

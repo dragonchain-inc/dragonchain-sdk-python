@@ -10,24 +10,32 @@
 # limitations under the License.
 
 import datetime
-import requests
 import logging
-import urllib
-from json import dumps
-from dragonchain_sdk.configuration import get_endpoint
-from dragonchain_sdk.credentials import Credentials
+import json
+import urllib.parse
+from typing import cast, Any, Optional, Union, Dict, TYPE_CHECKING
+
+import requests
+
+from dragonchain_sdk import configuration
+from dragonchain_sdk import credentials
 from dragonchain_sdk import exceptions
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    import mypy_extensions
+
+    request_response = mypy_extensions.TypedDict("request_response", {"status": int, "ok": bool, "response": Union[dict, str]})
+
 supported_http = {
-    'GET': requests.get,
-    'POST': requests.post,
-    'PUT': requests.put,
-    'PATCH': requests.patch,
-    'DELETE': requests.delete,
-    'HEAD': requests.head,
-    'OPTIONS': requests.options
+    "GET": requests.get,
+    "POST": requests.post,
+    "PUT": requests.put,
+    "PATCH": requests.patch,
+    "DELETE": requests.delete,
+    "HEAD": requests.head,
+    "OPTIONS": requests.options,
 }
 
 
@@ -35,7 +43,7 @@ class Request(object):
     """Construct a new `Request` object
 
     Args:
-        credentials (Credentials): The credentials for the chain to associate with requests
+        credentials_obj (Credentials): The credentials for the chain to associate with requests
         endpoint (str, optional): The URL for the endpoint of the chain
         verify (bool, optional): Boolean indicating whether to validate the SSL certificate of the endpoint when making requests
 
@@ -45,21 +53,22 @@ class Request(object):
     Returns:
         A new Request object.
     """
-    def __init__(self, credentials, endpoint: str = None, verify: bool = True):
-        if isinstance(credentials, Credentials):
-            self.credentials = credentials
+
+    def __init__(self, credentials_obj, endpoint: Optional[str] = None, verify: bool = True):
+        if isinstance(credentials_obj, credentials.Credentials):
+            self.credentials = credentials_obj
         else:
             raise TypeError('Parameter "credentials" must be of type Credentials.')
 
         if isinstance(verify, bool):
             self.verify = verify
-            logger.debug('SSL certificates {} be verified when making requests'.format('will' if self.verify else 'will NOT'))
+            logger.debug("SSL certificates will{} be verified when making requests".format("" if self.verify else " NOT"))
         else:
             raise TypeError('Parameter "verify" must be of type bool.')
 
         self.update_endpoint(endpoint)
 
-    def update_endpoint(self, endpoint: str = None):
+    def update_endpoint(self, endpoint: Optional[str] = None) -> None:
         """Update endpoint for this request object
 
         Args:
@@ -72,14 +81,14 @@ class Request(object):
             None, sets the endpoint of this Request instance
         """
         if endpoint is None:
-            self.endpoint = get_endpoint(self.credentials.dragonchain_id)
+            self.endpoint = configuration.get_endpoint(self.credentials.dragonchain_id)
         elif isinstance(endpoint, str):
             self.endpoint = endpoint
         else:
             raise TypeError('Parameter "endpoint" must be of type str.')
-        logger.info('Target endpoint updated to {}'.format(self.endpoint))
+        logger.info("Target endpoint updated to {}".format(self.endpoint))
 
-    def get(self, path: str, parse_response: bool = True):
+    def get(self, path: str, parse_response: bool = True) -> "request_response":
         """Make a GET request to a chain
 
         Args:
@@ -89,17 +98,14 @@ class Request(object):
         Returns:
             Returns the response of the GET operation.
         """
-        return self._make_request(http_verb='GET',
-                                  path=path,
-                                  verify=self.verify,
-                                  parse_response=parse_response)
+        return self._make_request(http_verb="GET", path=path, verify=self.verify, parse_response=parse_response)
 
-    def post(self, path: str, body: dict, parse_response: bool = True, additional_headers: dict = None):
+    def post(self, path: str, body: Any, parse_response: bool = True, additional_headers: Optional[dict] = None) -> "request_response":
         """Make a POST request to a chain
 
         Args:
             path (str): Path of the request (including any path query parameters)
-            body (dict): A dictionary representing the JSON to post.
+            body (JSON-encodable): Object representing the JSON to post.
             parse_response (bool, optional): Decides whether the return from the chain should be parsed as json (default True)
 
         Returns:
@@ -107,46 +113,34 @@ class Request(object):
         """
         if additional_headers is None:
             additional_headers = {}
-        return self._make_request(http_verb='POST',
-                                  path=path,
-                                  verify=self.verify,
-                                  json=body,
-                                  parse_response=parse_response,
-                                  additional_headers=additional_headers)
+        return self._make_request(
+            http_verb="POST", path=path, verify=self.verify, json_content=body, parse_response=parse_response, additional_headers=additional_headers
+        )
 
-    def put(self, path: str, body: dict, parse_response: bool = True):
+    def put(self, path: str, body: Any, parse_response: bool = True) -> "request_response":
         """Make a PUT request to a chain
 
         Args:
             path (str): Path of the request (including any path query parameters)
-            body (dict): A dictionary representing the JSON to put.
+            body (JSON-encodable): Object representing the JSON to put.
             parse_response (bool, optional): Decides whether the return from the chain should be parsed as json (default True)
 
         Returns:
             Returns the response of the PUT operation.
         """
-        return self._make_request(http_verb='PUT',
-                                  path=path,
-                                  verify=self.verify,
-                                  json=body,
-                                  parse_response=parse_response)
+        return self._make_request(http_verb="PUT", path=path, verify=self.verify, json_content=body, parse_response=parse_response)
 
-    def delete(self, path: str, body: dict, parsed_response: bool = True):
+    def delete(self, path: str, parsed_response: bool = True) -> "request_response":
         """Make a DELETE request to the chain
 
         Args:
             path (str): Path of the request (including any path query parameters)
-            body (dict): A dictionary representing the JSON to put.
             parse_response (bool, optional): Decides whether the return from the chain should be parsed as json (default True)
 
         Returns:
             Returns the response of the DELETE operation
         """
-        return self._make_request(http_verb='DELETE',
-                                  path=path,
-                                  verify=self.verify,
-                                  json=body,
-                                  parse_response=parsed_response)
+        return self._make_request(http_verb="DELETE", path=path, verify=self.verify, parse_response=parsed_response)
 
     def get_requests_method(self, http_verb: str):
         """Get the appropriate requests method for a given http_verb
@@ -165,10 +159,10 @@ class Request(object):
             raise TypeError('Parameter "http_verb" must be of type str.')
         request_method = supported_http.get(http_verb.upper())
         if not request_method:
-            raise ValueError(http_verb + ' is an unsupported http operation.')
+            raise ValueError(http_verb + " is an unsupported http operation.")
         return request_method
 
-    def generate_query_string(self, query_dict: dict):
+    def generate_query_string(self, query_dict: dict) -> str:
         """Generate an http query string from a dictionary
 
         Args:
@@ -183,15 +177,15 @@ class Request(object):
         if not isinstance(query_dict, dict):
             raise TypeError('Parameter "query_dict" must be of type dict.')
         if query_dict:
-            query = '?'
+            query = "?"
             query_string = urllib.parse.urlencode(query_dict)
-            logger.debug('Generated query string {}'.format(query_string))
-            return '{}{}'.format(query, query_string)
+            logger.debug("Generated query string {}".format(query_string))
+            return "{}{}".format(query, query_string)
         else:
             # If input is empty, return an empty string as the query string
-            return ''
+            return ""
 
-    def get_lucene_query_params(self, query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
+    def get_lucene_query_params(self, query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10) -> str:
         """Generate a lucene query param string with given inputs
 
         Args:
@@ -212,17 +206,14 @@ class Request(object):
             raise TypeError('Parameter "sort" must be of type str.')
         if not isinstance(offset, int) or not isinstance(limit, int):
             raise TypeError('Parameters "limit" and "offset" must be of type int.')
-        params = {
-            'offset': offset,
-            'limit': limit
-        }
+        params = {"offset": str(offset), "limit": str(limit)}
         if query:
-            params['q'] = query
+            params["q"] = query
         if sort:
-            params['sort'] = sort
+            params["sort"] = sort
         return self.generate_query_string(params)
 
-    def make_headers(self, timestamp: str, authorization: str, content_type: str = None):
+    def make_headers(self, timestamp: str, authorization: str, content_type: Optional[str] = None) -> Dict[str, str]:
         """Create a headers dictionary to send with a request to a dragonchain
 
         Args:
@@ -242,16 +233,21 @@ class Request(object):
             raise TypeError('Parameter "authorization" must be of type str.')
         if content_type is not None and not isinstance(content_type, str):
             raise TypeError('Parameter "content_type" must be of type str.')
-        header_dict = {
-            'dragonchain': self.credentials.dragonchain_id,
-            'timestamp': timestamp,
-            'Authorization': authorization
-        }
+        header_dict = {"dragonchain": self.credentials.dragonchain_id, "timestamp": timestamp, "Authorization": authorization}
         if content_type:
-            header_dict['Content-Type'] = content_type
+            header_dict["Content-Type"] = content_type
         return header_dict
 
-    def _make_request(self, http_verb: str, path: str, json: dict = None, timeout: int = 30, verify: bool = True, parse_response: bool = True, additional_headers: dict = None):
+    def _make_request(
+        self,
+        http_verb: str,
+        path: str,
+        json_content: Optional[dict] = None,
+        timeout: int = 30,
+        verify: bool = True,
+        parse_response: bool = True,
+        additional_headers: Optional[dict] = None,
+    ) -> "request_response":
         """Make an http request to a dragonchain with the given information
 
         Args:
@@ -280,38 +276,38 @@ class Request(object):
             additional_headers = {}
         if not isinstance(path, str):
             raise TypeError('Parameter "path" must be of type str.')
-        if not path.startswith('/'):
-            raise ValueError('Parameter "path" must start with a \'/\'.')
+        if not path.startswith("/"):
+            raise ValueError("Parameter \"path\" must start with a '/'.")
 
-        logger.debug('Creating request {} {}'.format(http_verb, path))
+        logger.debug("Creating request {} {}".format(http_verb, path))
         requests_method = self.get_requests_method(http_verb)
-        content_type = 'application/json'
-        content = dumps(json)
+        content_type = "application/json"
+        content = json.dumps(json_content, separators=(",", ":"))
         # Add the 'Z' manually to indicate UTC (not added by isoformat)
-        timestamp = datetime.datetime.utcnow().isoformat() + 'Z'
+        timestamp = datetime.datetime.utcnow().isoformat() + "Z"
         authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)
 
         header_dict = self.make_headers(timestamp, authorization, content_type)
         additional_headers.update(header_dict)
         full_url = self.endpoint + path
 
-        logger.debug('Making request. Verify SSL: {}, Timeout: {}'.format(verify, timeout))
-        logger.debug('{} {}'.format(http_verb, full_url))
-        logger.debug('Headers: {}'.format(header_dict))
-        logger.debug('Data: {}'.format(content))
+        logger.debug("Making request. Verify SSL: {}, Timeout: {}".format(verify, timeout))
+        logger.debug("{} {}".format(http_verb, full_url))
+        logger.debug("Headers: {}".format(header_dict))
+        logger.debug("Data: {}".format(content))
 
         # Make request with appropriate data
         try:
             r = requests_method(url=full_url, data=content, headers=header_dict, timeout=timeout, verify=verify)
         except Exception as e:
-            raise exceptions.ConnectionException('Error while communicating with the Dragonchain: {}'.format(e))
+            raise exceptions.ConnectionException("Error while communicating with the Dragonchain: {}".format(e))
         return_dict = {}
         # Generate the return dictionary
         try:
-            return_dict['status'] = r.status_code
-            logger.debug('Response status code: {}'.format(r.status_code))
-            return_dict['ok'] = True if r.status_code // 100 == 2 else False
-            return_dict['response'] = r.json() if parse_response else r.text
-            return return_dict
+            return_dict["status"] = r.status_code
+            logger.debug("Response status code: {}".format(r.status_code))
+            return_dict["ok"] = True if r.status_code // 100 == 2 else False
+            return_dict["response"] = r.json() if parse_response else r.text
+            return cast("request_response", return_dict)
         except Exception as e:
-            raise exceptions.UnexpectedResponseException('Unexpected response from Dragonchain. Response: {} | Error: {}'.format(r.text, e))
+            raise exceptions.UnexpectedResponseException("Unexpected response from Dragonchain. Response: {} | Error: {}".format(r.text, e))

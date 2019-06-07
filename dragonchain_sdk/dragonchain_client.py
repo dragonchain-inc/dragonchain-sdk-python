@@ -11,10 +11,17 @@
 
 import os
 import logging
-from dragonchain_sdk.request import Request
-from dragonchain_sdk.credentials import Credentials
+from typing import cast, Optional, Union, List, TYPE_CHECKING
+
+from dragonchain_sdk import request
+from dragonchain_sdk import credentials
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    import mypy_extensions
+
+    custom_index_type = mypy_extensions.TypedDict("custom_index_type", {"key": str, "path": str})
 
 
 class Client(object):
@@ -31,12 +38,21 @@ class Client(object):
     Returns:
         A new Dragonchain client.
     """
-    def __init__(self, dragonchain_id, auth_key_id, auth_key, endpoint, verify, algorithm):
-        self.credentials = Credentials(dragonchain_id, auth_key, auth_key_id, algorithm)
-        self.request = Request(self.credentials, endpoint, verify)
-        logger.debug('Client finished initialization')
 
-    def get_smart_contract_secret(self, secret_name: str):
+    def __init__(
+        self,
+        dragonchain_id: Optional[str],
+        auth_key_id: Optional[str],
+        auth_key: Optional[str],
+        endpoint: Optional[str],
+        verify: bool,
+        algorithm: str,
+    ):
+        self.credentials = credentials.Credentials(dragonchain_id, auth_key, auth_key_id, algorithm)
+        self.request = request.Request(self.credentials, endpoint, verify)
+        logger.debug("Client finished initialization")
+
+    def get_smart_contract_secret(self, secret_name: str) -> str:
         """Gets secrets for smart contracts
 
         Args:
@@ -51,10 +67,12 @@ class Client(object):
         """
         if not isinstance(secret_name, str):
             raise TypeError('Parameter "secret_name" must be of type str.')
-        if not os.environ.get('SMART_CONTRACT_ID'):
+        if not os.environ.get("SMART_CONTRACT_ID"):
             raise RuntimeError('Missing "SMART_CONTRACT_ID" from environment')
-        path = os.path.join(os.path.abspath(os.sep), 'var', 'openfaas', 'secrets', 'sc-{}-{}'.format(os.environ.get('SMART_CONTRACT_ID'), secret_name))
-        return open(path, 'r').read()
+        path = os.path.join(
+            os.path.abspath(os.sep), "var", "openfaas", "secrets", "sc-{}-{}".format(os.environ.get("SMART_CONTRACT_ID"), secret_name)
+        )
+        return open(path, "r").read()
 
     def get_status(self):
         """Get the status from a chain
@@ -62,9 +80,9 @@ class Client(object):
         Returns:
             Returns the status of a Dragonchain
         """
-        return self.request.get('/status')
+        return self.request.get("/status")
 
-    def query_smart_contracts(self, lucene_query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
+    def query_smart_contracts(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's smart contracts
 
         Args:
@@ -77,9 +95,9 @@ class Client(object):
             The results of the query
         """
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
-        return self.request.get('/contract{}'.format(query_params))
+        return self.request.get("/contract{}".format(query_params))
 
-    def get_smart_contract(self, smart_contract_id: str = None, transaction_type: str = None):
+    def get_smart_contract(self, smart_contract_id: Optional[str] = None, transaction_type: Optional[str] = None):
         """Perform a query on a chain's smart contracts
 
         Args:
@@ -99,24 +117,25 @@ class Client(object):
         if smart_contract_id and transaction_type:
             raise TypeError('Only one of "smart_contract_id" and "transaction_type" can be specified')
         if smart_contract_id:
-            return self.request.get('/contract/{}'.format(smart_contract_id))
+            return self.request.get("/contract/{}".format(smart_contract_id))
         elif transaction_type:
-            return self.request.get('/contract/txn_type/{}'.format(transaction_type))
+            return self.request.get("/contract/txn_type/{}".format(transaction_type))
         else:
             raise TypeError('At least one of "smart_contract_id" or "transaction_type" must be specified')
 
-    def create_smart_contract(self,
-                              transaction_type: str,
-                              image: str,
-                              cmd: str,
-                              args: list = None,
-                              execution_order: str = 'parallel',
-                              environment_variables: dict = None,
-                              secrets: dict = None,
-                              scheduler_interval_in_seconds: int = None,
-                              cron_expression: str = None,
-                              registry_credentials: str = None,
-                              ):
+    def create_smart_contract(
+        self,
+        transaction_type: str,
+        image: str,
+        cmd: str,
+        args: Optional[list] = None,
+        execution_order: str = "parallel",
+        environment_variables: Optional[dict] = None,
+        secrets: Optional[dict] = None,
+        scheduler_interval_in_seconds: Optional[int] = None,
+        cron_expression: Optional[str] = None,
+        registry_credentials: Optional[str] = None,
+    ):
         """Post a contract to a chain
 
         Args:
@@ -147,7 +166,7 @@ class Client(object):
             raise TypeError('Parameter "args" must be of type list.')
         if not isinstance(execution_order, str):
             raise TypeError('Parameter "execution_order" must be of type str.')
-        if execution_order is not None and execution_order not in ['parallel', 'serial']:
+        if execution_order is not None and execution_order not in ["parallel", "serial"]:
             raise ValueError('Parameter "execution_order" must be either "serial" or "parallel".')
         if environment_variables is not None and not isinstance(environment_variables, dict):
             raise TypeError('Parameter "environment_variables" must be of type dict.')
@@ -162,40 +181,35 @@ class Client(object):
         if registry_credentials is not None and not isinstance(registry_credentials, str):
             raise TypeError('Parameter "registry_credentials" must be of type str.')
 
-        body = {
-            'version': '3',
-            'txn_type': transaction_type,
-            'image': image,
-            'cmd': cmd,
-            'execution_order': execution_order,
-        }
+        body = cast(dict, {"version": "3", "txn_type": transaction_type, "image": image, "cmd": cmd, "execution_order": execution_order})
         if environment_variables:
-            body['env'] = environment_variables
+            body["env"] = environment_variables
         if args:
-            body['args'] = args
+            body["args"] = args
         if secrets:
-            body['secrets'] = secrets
+            body["secrets"] = secrets
         if scheduler_interval_in_seconds:
-            body['seconds'] = scheduler_interval_in_seconds
+            body["seconds"] = scheduler_interval_in_seconds
         if cron_expression:
-            body['cron'] = cron_expression
+            body["cron"] = cron_expression
         if registry_credentials:
-            body['auth'] = registry_credentials
-        return self.request.post('/contract', body)
+            body["auth"] = registry_credentials
+        return self.request.post("/contract", body)
 
-    def update_smart_contract(self,
-                              smart_contract_id: str,
-                              image: str = None,
-                              cmd: str = None,
-                              args: list = None,
-                              execution_order: str = None,
-                              enabled: bool = None,
-                              environment_variables: dict = {},
-                              secrets: dict = {},
-                              scheduler_interval_in_seconds: int = None,
-                              cron_expression: str = None,
-                              registry_credentials: str = None
-                              ):
+    def update_smart_contract(  # noqa: C901
+        self,
+        smart_contract_id: str,
+        image: Optional[str] = None,
+        cmd: Optional[str] = None,
+        args: Optional[list] = None,
+        execution_order: Optional[str] = None,
+        enabled: Optional[bool] = None,
+        environment_variables: Optional[dict] = None,
+        secrets: Optional[dict] = None,
+        scheduler_interval_in_seconds: Optional[int] = None,
+        cron_expression: Optional[str] = None,
+        registry_credentials: Optional[str] = None,
+    ):
         """Update an existing smart contract. The contract_id and at least one optional parameter must be supplied.
 
         Args:
@@ -225,7 +239,7 @@ class Client(object):
             raise TypeError('Parameter "cmd" must be of type str.')
         if execution_order is not None and not isinstance(execution_order, str):
             raise TypeError('Parameter "execution_order" must be of type str.')
-        if execution_order is not None and execution_order not in ['parallel', 'serial']:
+        if execution_order is not None and execution_order not in ["parallel", "serial"]:
             raise ValueError('Parameter "execution_order" must be either "serial" or "parallel".')
         if enabled is not None and not isinstance(enabled, bool):
             raise TypeError('Parameter "enabled" must be of type bool.')
@@ -242,33 +256,31 @@ class Client(object):
         if registry_credentials is not None and not isinstance(registry_credentials, str):
             raise TypeError('Parameter "registry_credentials" must be of type str.')
 
-        body = {
-            'version': '3'
-        }
+        body = cast(dict, {"version": "3"})
         if image:
-            body['image'] = image
+            body["image"] = image
         if cmd:
-            body['cmd'] = cmd
+            body["cmd"] = cmd
         if execution_order:
-            body['execution_order'] = execution_order
+            body["execution_order"] = execution_order
         if enabled is False:
-            body['desired_state'] = 'inactive'
+            body["desired_state"] = "inactive"
         if enabled is True:
-            body['desired_state'] = 'active'
+            body["desired_state"] = "active"
         if args:
-            body['args'] = args
+            body["args"] = args
         if environment_variables:
-            body['env'] = environment_variables
+            body["env"] = environment_variables
         if secrets:
-            body['secrets'] = secrets
+            body["secrets"] = secrets
         if scheduler_interval_in_seconds:
-            body['seconds'] = scheduler_interval_in_seconds
+            body["seconds"] = scheduler_interval_in_seconds
         if cron_expression:
-            body['cron'] = cron_expression
+            body["cron"] = cron_expression
         if registry_credentials:
-            body['auth'] = registry_credentials
+            body["auth"] = registry_credentials
 
-        return self.request.put('/contract/{}'.format(smart_contract_id), body)
+        return self.request.put("/contract/{}".format(smart_contract_id), body)
 
     def delete_smart_contract(self, smart_contract_id: str):
         """Delete an existing contract
@@ -284,9 +296,9 @@ class Client(object):
         """
         if not isinstance(smart_contract_id, str):
             raise TypeError('Parameter "state" must be of type str.')
-        return self.request.delete('/contract/{}'.format(smart_contract_id), body={})
+        return self.request.delete("/contract/{}".format(smart_contract_id))
 
-    def query_transactions(self, lucene_query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
+    def query_transactions(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's transactions
 
         Args:
@@ -299,7 +311,7 @@ class Client(object):
             The results of the query
         """
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
-        return self.request.get('/transaction{}'.format(query_params))
+        return self.request.get("/transaction{}".format(query_params))
 
     def get_transaction(self, transaction_id: str):
         """Get a specific transaction by id
@@ -315,9 +327,9 @@ class Client(object):
         """
         if not isinstance(transaction_id, str):
             raise TypeError('Paramter "transaction_id" must be of type str.')
-        return self.request.get('/transaction/{}'.format(transaction_id))
+        return self.request.get("/transaction/{}".format(transaction_id))
 
-    def create_transaction(self, transaction_type: str, payload: str or dict, tag: str = None, callback_url: str = None):
+    def create_transaction(self, transaction_type: str, payload: Union[str, dict], tag: Optional[str] = None, callback_url: Optional[str] = None):
         """Post a transaction to a chain
 
         Args:
@@ -329,10 +341,10 @@ class Client(object):
             Transaction ID on success
         """
         headers = {}
-        if(callback_url):
-            headers['X-Callback-Url'] = callback_url
+        if callback_url:
+            headers["X-Callback-Url"] = callback_url
 
-        return self.request.post('/transaction', _build_transaction_dict(transaction_type, payload, tag), additional_headers=headers)
+        return self.request.post("/transaction", _build_transaction_dict(transaction_type, payload, tag), additional_headers=headers)
 
     def create_bulk_transaction(self, transaction_list: list):
         """Post many transactions to a chain at once, over a single connnection
@@ -354,11 +366,13 @@ class Client(object):
         for transaction in transaction_list:
             if not isinstance(transaction, dict):
                 raise TypeError('All items in parameter "transaction_list" must be of type dict.')
-            post_data.append(_build_transaction_dict(transaction.get('transaction_type'), transaction.get('payload'), transaction.get('tag')))
+            post_data.append(
+                _build_transaction_dict(transaction.get("transaction_type") or "", transaction.get("payload") or "", transaction.get("tag") or "")
+            )
 
-        return self.request.post('/transaction_bulk', post_data)
+        return self.request.post("/transaction_bulk", post_data)
 
-    def query_blocks(self, lucene_query: str = None, sort: str = None, offset: int = 0, limit: int = 10):
+    def query_blocks(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
         """Perform a query on a chain's blocks
 
         Args:
@@ -371,7 +385,7 @@ class Client(object):
             The results of the query
         """
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
-        return self.request.get('/block{}'.format(query_params))
+        return self.request.get("/block{}".format(query_params))
 
     def get_block(self, block_id: str):
         """Get a specific block by id
@@ -387,9 +401,9 @@ class Client(object):
         """
         if not isinstance(block_id, str):
             raise TypeError('Parameter "block_id" must be of type str.')
-        return self.request.get('/block/{}'.format(block_id))
+        return self.request.get("/block/{}".format(block_id))
 
-    def get_verifications(self, block_id: str, level: int = None):
+    def get_verifications(self, block_id: str, level: Optional[int] = None):
         """Get higher level block verifications by level 1 block id
 
         Args:
@@ -409,8 +423,50 @@ class Client(object):
                 raise TypeError('Parameter "level" must be of int.')
             if level not in [2, 3, 4, 5]:
                 raise ValueError('Parameter "level" must be between 2 and 5 inclusive.')
-            return self.request.get('/verifications/{}?level={}'.format(block_id, level))
-        return self.request.get('/verifications/{}'.format(block_id))
+            return self.request.get("/verifications/{}?level={}".format(block_id, level))
+        return self.request.get("/verifications/{}".format(block_id))
+
+    def get_api_key(self, key_id: str):
+        """Get information about an HMAC API key
+
+        Args:
+            key_id (str): The ID of the api key to retrieve data about
+
+        Raises:
+            TypeError: with bad parameter types
+
+        Returns:
+            Data about the API key
+        """
+        if not isinstance(key_id, str):
+            raise TypeError('Parameter "key_id" must be of type str.')
+        return self.request.get("/api-key/{}".format(key_id))
+
+    def list_api_keys(self):
+        """List of HMAC API keys
+
+        Returns:
+            A list of key IDs and their associated data
+        """
+        return self.request.get("/api-key")
+
+    def create_api_key(self):
+        """Generate a new HMAC API key
+
+        Returns:
+            A new API key ID and key
+        """
+        return self.request.post("/api-key", {})
+
+    def delete_api_key(self, key_id: str):
+        """Delete an existing HMAC API key
+
+        Returns:
+            204 No Content on success
+        """
+        if not isinstance(key_id, str):
+            raise TypeError('Parameter "key_id" must be of type str.')
+        return self.request.delete("/api-key/{}".format(key_id))
 
     def get_smart_contract_object(self, key: str, smart_contract_id: str = None):
         """Retrieve data from the object storage of a smart contract
@@ -429,18 +485,19 @@ class Client(object):
         if not isinstance(key, str):
             raise TypeError('Parameter "key" must be of type str.')
         if smart_contract_id is None:
-            smart_contract_id = os.environ.get('SMART_CONTRACT_ID')
+            smart_contract_id = os.environ.get("SMART_CONTRACT_ID")
         if not isinstance(smart_contract_id, str):
             raise TypeError('Parameter "smart_contract_id" must be of type str.')
-        return self.request.get('/get/{}/{}'.format(smart_contract_id, key), parse_response=False)
+        return self.request.get("/get/{}/{}".format(smart_contract_id, key), parse_response=False)
 
-    def list_smart_contract_objects(self, prefix_key: str = None, smart_contract_id: str = None):
+    def list_smart_contract_objects(self, prefix_key: Optional[str] = None, smart_contract_id: Optional[str] = None):
         """Lists all objects stored in a smart contracts heap
         Note: When ran in an actual smart contract, smart_contract_id will be pulled automatically from the environment if not explicitly provided
 
         Args:
             smart_contract_id (str, optional): smart_contract_id heap to list. If not provided explicitly, it must be in the SMART_CONTRACT_NAME env var
-            prefix_key (str, optional): the prefix_key or "folder" from which to list objects. Must NOT contain trailing slash "/". Default to the root of the accessable filesystem + /list/{smart_contract_id}/
+            prefix_key (str, optional): the prefix_key or "folder" from which to list objects. Must NOT contain trailing slash "/".
+                                        Note: Defaults to the root of the accessable filesystem + /list/{smart_contract_id}/
 
         Raises:
             TypeError: with bad parameter types
@@ -450,24 +507,25 @@ class Client(object):
             Parsed json response from the chain
         """
         if smart_contract_id is None:
-            smart_contract_id = os.environ.get('SMART_CONTRACT_ID')
+            smart_contract_id = os.environ.get("SMART_CONTRACT_ID")
         if not isinstance(smart_contract_id, str):
             raise TypeError('Parameter "smart_contract_id" must be of type str.')
         if prefix_key is not None:
             if not isinstance(prefix_key, str):
                 raise TypeError('Parameter "prefix_key" must be of type str.')
-            if prefix_key.endswith('/'):
+            if prefix_key.endswith("/"):
                 raise ValueError('Parameter "prefix_key" cannot end with /.')
-            return self.request.get('/list/{}/{}/'.format(smart_contract_id, prefix_key))
-        return self.request.get('/list/{}/'.format(smart_contract_id))
+            return self.request.get("/list/{}/{}/".format(smart_contract_id, prefix_key))
+        return self.request.get("/list/{}/".format(smart_contract_id))
 
-    def create_bitcoin_transaction(self,
-                                   network: str,
-                                   satoshis_per_byte: float = None,
-                                   data: str = None,
-                                   change_address: str = None,
-                                   outputs: list = None
-                                   ):
+    def create_bitcoin_transaction(
+        self,
+        network: str,
+        satoshis_per_byte: Optional[float] = None,
+        data: Optional[str] = None,
+        change_address: Optional[str] = None,
+        outputs: Optional[list] = None,
+    ):
         """Create and sign a bitcoin transaction using your chain's private keys
 
         Args:
@@ -487,7 +545,7 @@ class Client(object):
         Returns:
             The built and signed transaction
         """
-        valid_networks = ['BTC_MAINNET', 'BTC_TESTNET3']
+        valid_networks = ["BTC_MAINNET", "BTC_TESTNET3"]
         if not isinstance(network, str):
             raise TypeError('Parameter "network" must be of type str.')
         if satoshis_per_byte is not None and not isinstance(satoshis_per_byte, float):
@@ -501,29 +559,21 @@ class Client(object):
         if network not in valid_networks:
             raise ValueError('Parameter "network" must be one of {}.'.format(valid_networks))
 
-        body = {
-            'network': network,
-            'transaction': {}
-        }
+        body = cast(dict, {"network": network, "transaction": {}})
 
         if outputs:
-            body['transaction']['outputs'] = outputs
+            body["transaction"]["outputs"] = outputs
         if satoshis_per_byte:
-            body['transaction']['fee'] = satoshis_per_byte
+            body["transaction"]["fee"] = satoshis_per_byte
         if data:
-            body['transaction']['data'] = data
+            body["transaction"]["data"] = data
         if change_address:
-            body['transaction']['change'] = change_address
-        return self.request.post('/public-blockchain-transaction', body=body)
+            body["transaction"]["change"] = change_address
+        return self.request.post("/public-blockchain-transaction", body=body)
 
-    def create_ethereum_transaction(self,
-                                    network: str,
-                                    to: str,
-                                    value: str,
-                                    data: str = None,
-                                    gas_price: str = None,
-                                    gas: str = None
-                                    ):
+    def create_ethereum_transaction(
+        self, network: str, to: str, value: str, data: Optional[str] = None, gas_price: Optional[str] = None, gas: Optional[str] = None
+    ):
         """Create and sign a public ethereum transaction using your chain's private keys
 
         Args:
@@ -546,7 +596,7 @@ class Client(object):
         Returns:
             The built and signed transaction
         """
-        valid_networks = ['ETH_MAINNET', 'ETH_ROPSTEN', 'ETC_MAINNET', 'ETC_MORDEN']
+        valid_networks = ["ETH_MAINNET", "ETH_ROPSTEN", "ETC_MAINNET", "ETC_MORDEN"]
         if not isinstance(network, str):
             raise TypeError('Parameter "network" must be of type str.')
         if network not in valid_networks:
@@ -562,22 +612,16 @@ class Client(object):
         if gas is not None and not isinstance(gas, str):
             raise TypeError('Parameter "gas" must be of type str.')
 
-        body = {
-            'network': network,
-            'transaction': {
-                'to': to,
-                'value': value,
-            }
-        }
+        body = cast(dict, {"network": network, "transaction": {"to": to, "value": value}})
 
         if data:
-            body['transaction']['data'] = data
+            body["transaction"]["data"] = data
         if gas_price:
-            body['transaction']['gas_price'] = gas_price
+            body["transaction"]["gas_price"] = gas_price
         if gas:
-            body['transaction']['gas'] = gas
+            body["transaction"]["gas"] = gas
 
-        return self.request.post('/public-blockchain-transaction', body=body)
+        return self.request.post("/public-blockchain-transaction", body=body)
 
     def get_public_blockchain_addresses(self):
         """Get interchain addresses for this Dragonchain node (L1 and L5 only)
@@ -585,7 +629,7 @@ class Client(object):
         Returns:
             Dictionary containing addresses
         """
-        return self.request.get('/public-blockchain-address')
+        return self.request.get("/public-blockchain-address")
 
     def get_transaction_type(self, transaction_type: str):
         """Gets information on a registered transaction type
@@ -601,7 +645,7 @@ class Client(object):
         """
         if not isinstance(transaction_type, str):
             raise TypeError('Parameter "transaction_type" must be of type str.')
-        return self.request.get('/transaction-type/{}'.format(transaction_type))
+        return self.request.get("/transaction-type/{}".format(transaction_type))
 
     def list_transaction_types(self):
         """Lists out all registered transaction types for a chain
@@ -609,9 +653,9 @@ class Client(object):
         Returns:
             list of registered transaction types
         """
-        return self.request.get('/transaction-types')
+        return self.request.get("/transaction-types")
 
-    def update_transaction_type(self, transaction_type: str, custom_indexes: [{'key': str, 'path': str}]):
+    def update_transaction_type(self, transaction_type: str, custom_indexes: List["custom_index_type"]):
         """Updates the custom index of a given registered transaction type
         Transaction Types can optionally link custom search indexes to your transactions for easyier querying later.
         A CustomIndex is a dictionairy with two keys: 'key' and 'path'.
@@ -637,9 +681,9 @@ class Client(object):
         if not isinstance(custom_indexes, list):
             raise TypeError('Parameter "custom_indexes" must be of type list.')
         params = {"version": "1", "custom_indexes": custom_indexes}
-        return self.request.put('/transaction-type/{}'.format(transaction_type), params)
+        return self.request.put("/transaction-type/{}".format(transaction_type), params)
 
-    def create_transaction_type(self, transaction_type: str, custom_indexes: [{'key': str, 'path': str}] = None):
+    def create_transaction_type(self, transaction_type: str, custom_indexes: Optional[List["custom_index_type"]] = None):
         """Creates a new custom transaction type.
 
         Transaction Types can optionally link custom search indexes to your transactions for easyier querying later.
@@ -667,10 +711,10 @@ class Client(object):
             raise TypeError('Parameter "transaction_type" must be of type str.')
         if custom_indexes and not isinstance(custom_indexes, list):
             raise TypeError('Parameter "custom_indexes" must be of type list.')
-        params = {'version': '1', 'txn_type': transaction_type}
+        params = cast(dict, {"version": "1", "txn_type": transaction_type})
         if custom_indexes:
-            params['custom_indexes'] = custom_indexes
-        return self.request.post('/transaction-type', params)
+            params["custom_indexes"] = custom_indexes
+        return self.request.post("/transaction-type", params)
 
     def delete_transaction_type(self, transaction_type: str):
         """Deletes a transaction type registration
@@ -686,10 +730,10 @@ class Client(object):
         """
         if not isinstance(transaction_type, str):
             raise TypeError('Parameter "transaction_type" must be of type str.')
-        return self.request.delete('/transaction-type/{}'.format(transaction_type), body={})
+        return self.request.delete("/transaction-type/{}".format(transaction_type))
 
 
-def _build_transaction_dict(transaction_type: str, payload, tag: str = None):
+def _build_transaction_dict(transaction_type: str, payload: Union[str, dict], tag: Optional[str] = None) -> dict:
     """Build the json (dictionary) body for a transaction given its inputs
 
     Args:
@@ -701,7 +745,7 @@ def _build_transaction_dict(transaction_type: str, payload, tag: str = None):
         TypeError: with bad parameter types
 
     Returns:
-        List of succeeded transaction id's and list of failed transactions
+        Dictionary body to use for sending as a transaction
     """
     if not isinstance(transaction_type, str):
         raise TypeError('Parameter "transaction_type" must be of type str.')
@@ -710,12 +754,8 @@ def _build_transaction_dict(transaction_type: str, payload, tag: str = None):
     if tag is not None and not isinstance(tag, str):
         raise TypeError('Parameter "tag" must be of type str.')
 
-    body = {
-        'version': '1',
-        'txn_type': transaction_type,
-        'payload': payload
-    }
+    body = {"version": "1", "txn_type": transaction_type, "payload": payload}
     if tag:
-        body['tag'] = tag
+        body["tag"] = tag
 
     return body

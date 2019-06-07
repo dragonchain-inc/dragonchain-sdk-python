@@ -1,0 +1,5 @@
+flake8-bugbear
+flake8-mypy
+mypy
+mypy-extensions
+black>=19.3b0
