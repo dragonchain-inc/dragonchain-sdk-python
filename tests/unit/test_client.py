@@ -685,14 +685,42 @@ class TestClientMehods(unittest.TestCase):
             },
         )
 
-    def test_test_create_ethereum_transaction_throws_value_error_on_invalid_network(self, mock_creds, mock_request):
+    def test_create_api_key(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.create_api_key()
+        self.client.request.post.assert_called_once_with("/api-key", {})
+
+    def test_delete_api_key(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.delete_api_key("MyKeyID")
+        self.client.request.delete.assert_called_once_with("/api-key/MyKeyID")
+
+    def test_delete_api_key_throws_type_error(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.assertRaises(TypeError, self.client.delete_api_key, 1234)
+
+    def test_get_api_key(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.get_api_key("MyKeyID")
+        self.client.request.get.assert_called_once_with("/api-key/MyKeyID")
+
+    def test_get_api_key_throws_type_error(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.assertRaises(TypeError, self.client.get_api_key, 1234)
+
+    def test_list_api_keys(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.list_api_keys()
+        self.client.request.get.assert_called_once_with("/api-key")
+
+    def test_create_ethereum_transaction_throws_value_error_on_invalid_network(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.assertRaises(ValueError, self.client.create_ethereum_transaction, "NEO_MAINNET", "flim_flam", "potato")
 
-    def test_test_create_ethereum_transaction_throws_type_error_on_invalid_network_type(self, mock_creds, mock_request):
+    def test_create_ethereum_transaction_throws_type_error_on_invalid_network_type(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.assertRaises(TypeError, self.client.create_ethereum_transaction, b"ETH_MAINNET", "flim_flam", "apples")
 
-    def test_test_create_ethereum_transaction_throws_type_error_on_invalid_transaction_type(self, mock_creds, mock_request):
+    def test_create_ethereum_transaction_throws_type_error_on_invalid_transaction_type(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.assertRaises(ValueError, self.client.create_ethereum_transaction, "BANANA", "invalid", "banana")

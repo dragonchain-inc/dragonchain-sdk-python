@@ -426,7 +426,49 @@ class Client(object):
             return self.request.get("/verifications/{}?level={}".format(block_id, level))
         return self.request.get("/verifications/{}".format(block_id))
 
-    def get_smart_contract_object(self, key: str, smart_contract_id: Optional[str] = None):
+    def get_api_key(self, key_id: str):
+        """Get information about an HMAC API key
+
+        Args:
+            key_id (str): The ID of the api key to retrieve data about
+
+        Raises:
+            TypeError: with bad parameter types
+
+        Returns:
+            Data about the API key
+        """
+        if not isinstance(key_id, str):
+            raise TypeError('Parameter "key_id" must be of type str.')
+        return self.request.get("/api-key/{}".format(key_id))
+
+    def list_api_keys(self):
+        """List of HMAC API keys
+
+        Returns:
+            A list of key IDs and their associated data
+        """
+        return self.request.get("/api-key")
+
+    def create_api_key(self):
+        """Generate a new HMAC API key
+
+        Returns:
+            A new API key ID and key
+        """
+        return self.request.post("/api-key", {})
+
+    def delete_api_key(self, key_id: str):
+        """Delete an existing HMAC API key
+
+        Returns:
+            204 No Content on success
+        """
+        if not isinstance(key_id, str):
+            raise TypeError('Parameter "key_id" must be of type str.')
+        return self.request.delete("/api-key/{}".format(key_id))
+
+    def get_smart_contract_object(self, key: str, smart_contract_id: str = None):
         """Retrieve data from the object storage of a smart contract
         Note: When ran in an actual smart contract, smart_contract_id will be pulled automatically from the environment if not explicitly provided
 
