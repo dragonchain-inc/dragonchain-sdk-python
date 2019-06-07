@@ -190,7 +190,7 @@ class TestClientMehods(unittest.TestCase):
             image="valid",
             cmd="",
             args=["valid"],
-            scheduler_interval_in_seconds="FAIL",
+            schedule_interval_in_seconds="FAIL",
         )
         self.assertRaises(
             ValueError,
@@ -199,7 +199,7 @@ class TestClientMehods(unittest.TestCase):
             image="valid",
             cmd="",
             args=["valid"],
-            scheduler_interval_in_seconds=99999,
+            schedule_interval_in_seconds=99999,
             cron_expression="FAIL",
         )
         self.assertRaises(
@@ -295,7 +295,7 @@ class TestClientMehods(unittest.TestCase):
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", args={})
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", environment_variables=[])
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", secrets=[])
-        self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", scheduler_interval_in_seconds="seconds")
+        self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", schedule_interval_in_seconds="seconds")
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", cron_expression=1)
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", registry_credentials=[])
         self.assertRaises(TypeError, self.client.update_smart_contract, smart_contract_id="some_id", enabled=[])
@@ -346,7 +346,7 @@ class TestClientMehods(unittest.TestCase):
 
     def test_update_smart_contract_calls_put_with_seconds(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
-        self.client.update_smart_contract(smart_contract_id="some_id", scheduler_interval_in_seconds=1)
+        self.client.update_smart_contract(smart_contract_id="some_id", schedule_interval_in_seconds=1)
         self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "seconds": 1})
 
     def test_update_smart_contract_calls_put_with_cron(self, mock_creds, mock_request):
