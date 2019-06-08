@@ -132,7 +132,7 @@ class Client(object):
         execution_order: str = "parallel",
         environment_variables: Optional[dict] = None,
         secrets: Optional[dict] = None,
-        scheduler_interval_in_seconds: Optional[int] = None,
+        schedule_interval_in_seconds: Optional[int] = None,
         cron_expression: Optional[str] = None,
         registry_credentials: Optional[str] = None,
     ):
@@ -146,8 +146,8 @@ class Client(object):
             args (optional, list): List of arguments to the cmd field
             environment_variables (optional, dict): dict mapping of environment variables for your contract runtime
             secrets (optional, dict): dict mapping of secrets for your contract runtime
-            scheduler_interval_in_seconds (optional, int): The seconds of scheduled execution in seconds. Must not be set if cron_expression is set
-            cron_expression (optional, str): The rate of scheduled execution specified as a cron. Must not be set if scheduler_interval_in_seconds is set
+            schedule_interval_in_seconds (optional, int): The seconds of scheduled execution in seconds. Must not be set if cron_expression is set
+            cron_expression (optional, str): The rate of scheduled execution specified as a cron. Must not be set if schedule_interval_in_seconds is set
             registry_credentials (optional, str): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
         Raises:
@@ -172,10 +172,10 @@ class Client(object):
             raise TypeError('Parameter "environment_variables" must be of type dict.')
         if secrets is not None and not isinstance(secrets, dict):
             raise TypeError('Parameter "secrets" must be of type dict.')
-        if scheduler_interval_in_seconds is not None and cron_expression is not None:
-            raise ValueError('Parameter "scheduler_interval_in_seconds" and "cron_expression" can not both be set')
-        if scheduler_interval_in_seconds is not None and not isinstance(scheduler_interval_in_seconds, int):
-            raise TypeError('Parameter "scheduler_interval_in_seconds" must be of type int.')
+        if schedule_interval_in_seconds is not None and cron_expression is not None:
+            raise ValueError('Parameter "schedule_interval_in_seconds" and "cron_expression" can not both be set')
+        if schedule_interval_in_seconds is not None and not isinstance(schedule_interval_in_seconds, int):
+            raise TypeError('Parameter "schedule_interval_in_seconds" must be of type int.')
         if cron_expression is not None and not isinstance(cron_expression, str):
             raise TypeError('Parameter "cron_expression" must be of type str.')
         if registry_credentials is not None and not isinstance(registry_credentials, str):
@@ -188,8 +188,8 @@ class Client(object):
             body["args"] = args
         if secrets:
             body["secrets"] = secrets
-        if scheduler_interval_in_seconds:
-            body["seconds"] = scheduler_interval_in_seconds
+        if schedule_interval_in_seconds:
+            body["seconds"] = schedule_interval_in_seconds
         if cron_expression:
             body["cron"] = cron_expression
         if registry_credentials:
@@ -206,7 +206,7 @@ class Client(object):
         enabled: Optional[bool] = None,
         environment_variables: Optional[dict] = None,
         secrets: Optional[dict] = None,
-        scheduler_interval_in_seconds: Optional[int] = None,
+        schedule_interval_in_seconds: Optional[int] = None,
         cron_expression: Optional[str] = None,
         registry_credentials: Optional[str] = None,
     ):
@@ -221,7 +221,7 @@ class Client(object):
             args (list, optional): List of arguments to the cmd field
             environment_variables (dict, optional): dict mapping of environment variables for your contract runtime
             secrets (dict, optional): dict mapping of secrets for your contract runtime
-            scheduler_interval_in_seconds (int, optional): The seconds of scheduled execution in seconds
+            schedule_interval_in_seconds (int, optional): The seconds of scheduled execution in seconds
             cron_expression (str, optional): The rate of scheduled execution specified as a cron
             registry_credentials (str, optional): basic-auth for pulling docker images, base64 encoded (e.g. username:password)
 
@@ -249,8 +249,8 @@ class Client(object):
             raise TypeError('Parameter "env" must be of type dict.')
         if secrets is not None and not isinstance(secrets, dict):
             raise TypeError('Parameter "secrets" must be of type dict.')
-        if scheduler_interval_in_seconds is not None and not isinstance(scheduler_interval_in_seconds, int):
-            raise TypeError('Parameter "scheduler_interval_in_seconds" must be of type int.')
+        if schedule_interval_in_seconds is not None and not isinstance(schedule_interval_in_seconds, int):
+            raise TypeError('Parameter "schedule_interval_in_seconds" must be of type int.')
         if cron_expression is not None and not isinstance(cron_expression, str):
             raise TypeError('Parameter "cron_expression" must be of type str.')
         if registry_credentials is not None and not isinstance(registry_credentials, str):
@@ -273,8 +273,8 @@ class Client(object):
             body["env"] = environment_variables
         if secrets:
             body["secrets"] = secrets
-        if scheduler_interval_in_seconds:
-            body["seconds"] = scheduler_interval_in_seconds
+        if schedule_interval_in_seconds:
+            body["seconds"] = schedule_interval_in_seconds
         if cron_expression:
             body["cron"] = cron_expression
         if registry_credentials:
