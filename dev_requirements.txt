@@ -1,3 +1,4 @@
+jsonschema
 flake8-bugbear
 flake8-mypy
 mypy

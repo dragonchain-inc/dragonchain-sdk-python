@@ -1,29 +1,32 @@
-.. Dragonchain Python SDK documentation master file, created by
-   sphinx-quickstart on Fri Dec 14 11:31:20 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Dragonchain Python SDK Documentation
-==================================================
+====================================
+
+Welcome to the documentation for the Dragonchain Python SDK!
+
+Intro
+-----
+
+This SDK helps provide the functionality to be able to easily interact with
+a `Dragonchain <https://dragonchain.com>`_ with Python 3.
+
+Source Code
+-----------
+
+All of the source code, as well as issue tracker can be viewed `on github <https://github.com/dragonchain-inc/dragonchain-sdk-python/>`_.
 
 .. toctree::
+   :caption: Contents
    :maxdepth: 2
-   :caption: Contents:
 
-.. include:: ../README.rst
+   installation
+   getting_started
+   configuration
+   api
+   changelog
 
-Documentation
--------------
+.. toctree::
+   :caption: Meta
+   :maxdepth: 2
 
-.. automodule:: dragonchain_sdk
-  :members:
-
-.. autoclass:: dragonchain_sdk.dragonchain_client.Client
-  :members:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   contributing
+   license

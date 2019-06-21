@@ -12,7 +12,7 @@
 import os
 import logging
 import configparser
-from typing import Tuple
+from typing import cast, Tuple
 
 import requests
 
@@ -139,7 +139,7 @@ def _get_endpoint_from_remote(dragonchain_id: str) -> str:
     """
     try:
         r = requests.get("https://matchmaking.api.dragonchain.com/registration/{}".format(dragonchain_id), timeout=30)
-    except (requests.Timeout, requests.ConnectionError, requests.ConnectTimeout):  # noqa: T484  requests does indeed have ConnectTimeout
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
         logger.exception("Could not contact matchmaking for dragonchain endpoint. Ensure internet is working properly.")
         raise exceptions.MatchmakingException("Could not contact matchmaking")
     except Exception:
@@ -148,7 +148,7 @@ def _get_endpoint_from_remote(dragonchain_id: str) -> str:
     if r.status_code < 200 or r.status_code >= 300:
         raise exceptions.MatchmakingException("Non-200 response from matchmaking. Status code {} with response: {}".format(r.status_code, r.text))
     try:
-        return r.json()["url"]
+        return cast(str, r.json()["url"])  # We expect this to be a string
     except Exception:
         raise exceptions.MatchmakingException("Unexpected response contents from matchmaking\n{}".format(r.text))
 

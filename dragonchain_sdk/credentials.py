@@ -14,7 +14,7 @@ import hmac
 import sys
 import base64
 import logging
-from typing import Optional, Union
+from typing import cast, Any, Optional, Union, Callable
 
 from dragonchain_sdk import configuration
 
@@ -83,7 +83,7 @@ class Credentials(object):
         else:
             raise TypeError('Parameter "algorithm" must be of type str.')
 
-    def get_hash_method(self, algorithm: str):
+    def get_hash_method(self, algorithm: str) -> Callable[..., Any]:
         """Return a hash method that supports the hashlib .new function
 
         Args:
@@ -163,7 +163,7 @@ class Credentials(object):
         Returns:
             bytes of hashed input
         """
-        return self.hash_method(self.bytes_from_input(input_data)).digest()
+        return cast(bytes, self.hash_method(self.bytes_from_input(input_data)).digest())  # We know this is always a hashlib hash that returns bytes
 
     def create_hmac(self, secret: str, message: Union[bytes, str]) -> bytes:
         """Create an hmac from a given hash type, secret, and message

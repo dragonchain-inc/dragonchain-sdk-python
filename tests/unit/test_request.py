@@ -211,7 +211,7 @@ class TestRequestsMethods(unittest.TestCase):
         mock_get_request.assert_called_once_with("GET")
 
     @patch("dragonchain_sdk.request.Request.get_requests_method")
-    def test_make_request_raises_runtime_error_on_request_failure1(self, mock_get_request):
+    def test_make_request_raises_runtime_error_on_request_failure_post(self, mock_get_request):
         mock_get_request.return_value = MagicMock(side_effect=Exception)
         self.assertRaises(exceptions.ConnectionException, self.request._make_request, "POST", "/transaction", additional_headers={"banana": True})
         mock_get_request.assert_called_once_with("POST")
@@ -220,23 +220,38 @@ class TestRequestsMethods(unittest.TestCase):
         with requests_mock.mock() as m:
             m.get("https://dummy.test/transaction", status_code=400, text='{"error": "some error"}')
             expected_response = {"ok": False, "status": 400, "response": {"error": "some error"}}
-            self.assertDictEqual(self.request._make_request("GET", "/transaction"), expected_response)
+            self.assertEqual(self.request._make_request("GET", "/transaction"), expected_response)
 
     def test_make_request_parse_json(self):
         with requests_mock.mock() as m:
             m.get("https://dummy.test/transaction", status_code=200, json={"test": "object"})
             self.request._make_request("GET", "/transaction")
             expected_response = {"ok": True, "status": 200, "response": {"test": "object"}}
-            self.assertDictEqual(self.request._make_request("GET", "/transaction", parse_response=True), expected_response)
+            self.assertEqual(self.request._make_request("GET", "/transaction", parse_response=True), expected_response)
 
     def test_make_request_no_parse_json(self):
         with requests_mock.mock() as m:
             m.get("https://dummy.test/transaction", status_code=200, text='{"test": "object"}')
             expected_response = {"ok": True, "status": 200, "response": '{"test": "object"}'}
-            self.assertDictEqual(self.request._make_request("GET", "/transaction", parse_response=False), expected_response)
+            self.assertEqual(self.request._make_request("GET", "/transaction", parse_response=False), expected_response)
 
     @patch("dragonchain_sdk.request.Request.get_requests_method")
     def test_make_request_raises_runtime_error_on_parse_json_error(self, mock_get_request):
         mock_get_request.return_value.return_value.json.side_effect = RuntimeError("JSON Parse Error")
         mock_get_request.return_value.return_value.status_code = 200
         self.assertRaises(exceptions.UnexpectedResponseException, self.request._make_request, "GET", "/transaction")
+
+    @patch("dragonchain_sdk.request.datetime.datetime", utcnow=MagicMock(return_value=MagicMock(isoformat=MagicMock(return_value="mock_time"))))
+    @patch("dragonchain_sdk.request.Request.get_requests_method")
+    def test_make_request_adds_json_content_with_headers(self, mock_get_requests, mock_time):
+        self.request.credentials.get_authorization = MagicMock(return_value="dummy_auth")
+        mock_request = MagicMock()
+        mock_get_requests.return_value = mock_request
+        self.request._make_request("POST", "/transaction", json_content={"some": "data"})
+        mock_request.assert_called_once_with(
+            data='{"some":"data"}',
+            headers={"dragonchain": "TestID", "timestamp": "mock_timeZ", "Authorization": "dummy_auth", "Content-Type": "application/json"},
+            timeout=30,
+            url="https://dummy.test/transaction",
+            verify=True,
+        )

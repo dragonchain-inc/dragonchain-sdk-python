@@ -14,11 +14,11 @@ from typing import Optional
 
 from dragonchain_sdk import dragonchain_client
 
-__author__ = "Dragonchain"
-__version__ = "3.0.3"
+__author__ = "Dragonchain, Inc."
+__version__ = "3.0.4"
 
 
-def set_stream_logger(name="dragonchain_sdk", level=logging.DEBUG, format_string=None):
+def set_stream_logger(name: str = "dragonchain_sdk", level: int = logging.DEBUG, format_string: Optional[str] = None) -> None:
     """Set a stream logger for a module. You can set name to ``''`` to log everything.
 
     Args:
@@ -27,7 +27,7 @@ def set_stream_logger(name="dragonchain_sdk", level=logging.DEBUG, format_string
         format_string (str): Logging format
 
     Returns:
-        None, sets a stream logger
+        None, sets a stream logger for the whole SDK
     """
     if format_string is None:
         format_string = "%(asctime)s %(name)s [%(levelname)s] %(message)s"
@@ -48,7 +48,7 @@ def create_client(
     endpoint: Optional[str] = None,
     verify: bool = True,
     algorithm: str = "SHA256",
-):
+) -> dragonchain_client.Client:
     """Construct a new ``Client`` object
 
     Args:

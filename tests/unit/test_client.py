@@ -674,7 +674,7 @@ class TestClientMehods(unittest.TestCase):
             "/public-blockchain-transaction",
             body={
                 "network": "ETH_ROPSTEN",
-                "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gas_price": "1"},
+                "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gasPrice": "1"},
             },
         )
 
@@ -687,7 +687,7 @@ class TestClientMehods(unittest.TestCase):
             "/public-blockchain-transaction",
             body={
                 "network": "ETH_ROPSTEN",
-                "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gas_price": "1", "gas": "2"},
+                "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gasPrice": "1", "gas": "2"},
             },
         )
 
