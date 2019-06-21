@@ -13,7 +13,7 @@ import datetime
 import logging
 import json
 import urllib.parse
-from typing import cast, Any, Optional, Union, Dict, TYPE_CHECKING
+from typing import cast, Any, Callable, Optional, Dict, TYPE_CHECKING
 
 import requests
 
@@ -24,19 +24,20 @@ from dragonchain_sdk import exceptions
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    import mypy_extensions
+    from dragonchain_sdk.types import request_response
 
-    request_response = mypy_extensions.TypedDict("request_response", {"status": int, "ok": bool, "response": Union[dict, str]})
-
-supported_http = {
-    "GET": requests.get,
-    "POST": requests.post,
-    "PUT": requests.put,
-    "PATCH": requests.patch,
-    "DELETE": requests.delete,
-    "HEAD": requests.head,
-    "OPTIONS": requests.options,
-}
+supported_http = cast(
+    Dict[str, Callable[..., requests.Response]],
+    {
+        "GET": requests.get,
+        "POST": requests.post,
+        "PUT": requests.put,
+        "PATCH": requests.patch,
+        "DELETE": requests.delete,
+        "HEAD": requests.head,
+        "OPTIONS": requests.options,
+    },
+)
 
 
 class Request(object):
@@ -54,7 +55,7 @@ class Request(object):
         A new Request object.
     """
 
-    def __init__(self, credentials_obj, endpoint: Optional[str] = None, verify: bool = True):
+    def __init__(self, credentials_obj: credentials.Credentials, endpoint: Optional[str] = None, verify: bool = True):
         if isinstance(credentials_obj, credentials.Credentials):
             self.credentials = credentials_obj
         else:
@@ -100,7 +101,7 @@ class Request(object):
         """
         return self._make_request(http_verb="GET", path=path, verify=self.verify, parse_response=parse_response)
 
-    def post(self, path: str, body: Any, parse_response: bool = True, additional_headers: Optional[dict] = None) -> "request_response":
+    def post(self, path: str, body: Any, parse_response: bool = True, additional_headers: Optional[Dict[str, str]] = None) -> "request_response":
         """Make a POST request to a chain
 
         Args:
@@ -142,7 +143,7 @@ class Request(object):
         """
         return self._make_request(http_verb="DELETE", path=path, verify=self.verify, parse_response=parsed_response)
 
-    def get_requests_method(self, http_verb: str):
+    def get_requests_method(self, http_verb: str) -> Callable[..., requests.Response]:
         """Get the appropriate requests method for a given http_verb
 
         Args:
@@ -162,7 +163,7 @@ class Request(object):
             raise ValueError(http_verb + " is an unsupported http operation.")
         return request_method
 
-    def generate_query_string(self, query_dict: dict) -> str:
+    def generate_query_string(self, query_dict: Dict[str, str]) -> str:
         """Generate an http query string from a dictionary
 
         Args:
@@ -242,11 +243,11 @@ class Request(object):
         self,
         http_verb: str,
         path: str,
-        json_content: Optional[dict] = None,
+        json_content: Optional[Dict[Any, Any]] = None,
         timeout: int = 30,
         verify: bool = True,
         parse_response: bool = True,
-        additional_headers: Optional[dict] = None,
+        additional_headers: Optional[Dict[str, str]] = None,
     ) -> "request_response":
         """Make an http request to a dragonchain with the given information
 
@@ -281,8 +282,12 @@ class Request(object):
 
         logger.debug("Creating request {} {}".format(http_verb, path))
         requests_method = self.get_requests_method(http_verb)
-        content_type = "application/json"
-        content = json.dumps(json_content, separators=(",", ":"))
+        if json_content:
+            content_type = "application/json"
+            content = json.dumps(json_content, separators=(",", ":"))
+        else:
+            content_type = ""
+            content = ""
         # Add the 'Z' manually to indicate UTC (not added by isoformat)
         timestamp = datetime.datetime.utcnow().isoformat() + "Z"
         authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)

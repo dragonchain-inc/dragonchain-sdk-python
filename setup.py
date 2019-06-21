@@ -46,8 +46,11 @@ setuptools.setup(
     long_description_content_type="text/x-rst",
     url="https://dragonchain.com",
     packages=setuptools.find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    package_data={"dragonchain_sdk": ["py.typed"]},
+    include_package_data=True,
+    zip_safe=False,
     scripts=[],
-    install_requires=["requests>=2.4.0"],
+    install_requires=["requests>=2.4.0", 'typing;python_version<"3.5"'],
     license="Apache License 2.0",
     classifiers=[
         "Development Status :: 4 - Beta",

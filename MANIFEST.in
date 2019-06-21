@@ -1,0 +1,2 @@
+include LICENSE
+recursive-include dragonchain_sdk *py.typed

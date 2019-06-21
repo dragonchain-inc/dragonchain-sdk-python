@@ -9,7 +9,15 @@
 # -- Imports -----------------------------------------------------------------
 
 import os
+import re
 import sys
+
+
+def get_version():
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    init = open(os.path.join(root, "dragonchain_sdk", "__init__.py")).read()
+    return re.compile(r"""__version__ = ['"]([0-9.]+)['"]""").search(init).group(1)
+
 
 # -- Path setup --------------------------------------------------------------
 
@@ -28,9 +36,7 @@ copyright = "2019, Dragonchain, Inc."  # noqa: A001
 author = "Dragonchain, Inc."
 
 # The short X.Y version
-version = ""
-# The full version, including alpha/beta/rc tags
-release = ""
+version = get_version()
 
 
 # -- General configuration ---------------------------------------------------
@@ -42,10 +48,10 @@ release = ""
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.napoleon"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.viewcode"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = [".templates"]
+# templates_path = [".templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -60,7 +66,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -68,7 +74,7 @@ language = None
 exclude_patterns = [".build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = "sphinx"
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -76,99 +82,33 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#
-# html_theme_options = {}
+# https://sphinx-rtd-theme.readthedocs.io/en/latest/configuring.html
+html_theme_options = {
+    "canonical_url": "https://python-sdk-docs.dragonchain.com/latest/",
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    # Toc options
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = [".static"]
+# html_static_path = [".static"]
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
+html_logo = "content/logo.svg"
 
+html_favicon = "content/favicon.ico"
 
-# -- Options for HTMLHelp output ---------------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "DragonchainPythonSDKdoc"
-
-
-# -- Options for LaTeX output ------------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [(master_doc, "DragonchainPythonSDK.tex", "Dragonchain Python SDK Documentation", "Dragonchain, Inc.", "manual")]
-
-
-# -- Options for manual page output ------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "dragonchainpythonsdk", "Dragonchain Python SDK Documentation", [author], 1)]
-
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "DragonchainPythonSDK",
-        "Dragonchain Python SDK Documentation",
-        author,
-        "DragonchainPythonSDK",
-        "One line description of project.",
-        "Miscellaneous",
-    )
-]
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ["search.html"]
-
-
-# -- Extension configuration -------------------------------------------------
+hmtl_extra_path = ["content"]

@@ -12,4 +12,5 @@ flake8-builtins
 flake8-import-order
 bandit
 sphinx
+sphinx_rtd_theme
 twine

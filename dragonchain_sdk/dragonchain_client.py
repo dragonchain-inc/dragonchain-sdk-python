@@ -11,7 +11,7 @@
 
 import os
 import logging
-from typing import cast, Optional, Union, List, TYPE_CHECKING
+from typing import cast, Any, Dict, Optional, Union, List, TYPE_CHECKING
 
 from dragonchain_sdk import request
 from dragonchain_sdk import credentials
@@ -19,26 +19,10 @@ from dragonchain_sdk import credentials
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    import mypy_extensions
-
-    custom_index_type = mypy_extensions.TypedDict("custom_index_type", {"key": str, "path": str})
+    from dragonchain_sdk.types import request_response, custom_index_type  # noqa: F401 used by typing
 
 
 class Client(object):
-    """Construct a new ``Client`` object
-
-    Args:
-        dragonchain_id (str): The ID of the chain to connect to.
-        auth_key_id (str): The authorization key ID
-        auth_key (str): The authorization key
-        endpoint (str): The endpoint of the Dragonchain
-        verify (bool): Verify the TLS cert of the Dragonchain
-        algorithm (str): The hashing algorithm used for HMAC authentication
-
-    Returns:
-        A new Dragonchain client.
-    """
-
     def __init__(
         self,
         dragonchain_id: Optional[str],
@@ -74,7 +58,7 @@ class Client(object):
         )
         return open(path, "r").read()
 
-    def get_status(self):
+    def get_status(self) -> "request_response":
         """Get the status from a chain
 
         Returns:
@@ -82,7 +66,9 @@ class Client(object):
         """
         return self.request.get("/status")
 
-    def query_smart_contracts(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
+    def query_smart_contracts(
+        self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10
+    ) -> "request_response":
         """Perform a query on a chain's smart contracts
 
         Args:
@@ -97,7 +83,7 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
         return self.request.get("/contract{}".format(query_params))
 
-    def get_smart_contract(self, smart_contract_id: Optional[str] = None, transaction_type: Optional[str] = None):
+    def get_smart_contract(self, smart_contract_id: Optional[str] = None, transaction_type: Optional[str] = None) -> "request_response":
         """Perform a query on a chain's smart contracts
 
         Args:
@@ -128,14 +114,14 @@ class Client(object):
         transaction_type: str,
         image: str,
         cmd: str,
-        args: Optional[list] = None,
+        args: Optional[List[str]] = None,
         execution_order: str = "parallel",
-        environment_variables: Optional[dict] = None,
-        secrets: Optional[dict] = None,
+        environment_variables: Optional[Dict[str, str]] = None,
+        secrets: Optional[Dict[str, str]] = None,
         schedule_interval_in_seconds: Optional[int] = None,
         cron_expression: Optional[str] = None,
         registry_credentials: Optional[str] = None,
-    ):
+    ) -> "request_response":
         """Post a contract to a chain
 
         Args:
@@ -181,7 +167,7 @@ class Client(object):
         if registry_credentials is not None and not isinstance(registry_credentials, str):
             raise TypeError('Parameter "registry_credentials" must be of type str.')
 
-        body = cast(dict, {"version": "3", "txn_type": transaction_type, "image": image, "cmd": cmd, "execution_order": execution_order})
+        body = cast(Dict[str, Any], {"version": "3", "txn_type": transaction_type, "image": image, "cmd": cmd, "execution_order": execution_order})
         if environment_variables:
             body["env"] = environment_variables
         if args:
@@ -201,16 +187,16 @@ class Client(object):
         smart_contract_id: str,
         image: Optional[str] = None,
         cmd: Optional[str] = None,
-        args: Optional[list] = None,
+        args: Optional[List[str]] = None,
         execution_order: Optional[str] = None,
         enabled: Optional[bool] = None,
-        environment_variables: Optional[dict] = None,
-        secrets: Optional[dict] = None,
+        environment_variables: Optional[Dict[str, str]] = None,
+        secrets: Optional[Dict[str, str]] = None,
         schedule_interval_in_seconds: Optional[int] = None,
         cron_expression: Optional[str] = None,
         registry_credentials: Optional[str] = None,
-    ):
-        """Update an existing smart contract. The contract_id and at least one optional parameter must be supplied.
+    ) -> "request_response":
+        """Update an existing smart contract. The smart_contract_id and at least one optional parameter must be supplied.
 
         Args:
             smart_contract_id (str): id of the contract to update
@@ -232,7 +218,7 @@ class Client(object):
             Success or failure object
         """
         if not isinstance(smart_contract_id, str):
-            raise TypeError('Parameter "contract_id" must be of type str.')
+            raise TypeError('Parameter "smart_contract_id" must be of type str.')
         if image is not None and not isinstance(image, str):
             raise TypeError('Parameter "image" must be of type str.')
         if cmd is not None and not isinstance(cmd, str):
@@ -256,7 +242,7 @@ class Client(object):
         if registry_credentials is not None and not isinstance(registry_credentials, str):
             raise TypeError('Parameter "registry_credentials" must be of type str.')
 
-        body = cast(dict, {"version": "3"})
+        body = cast(Dict[str, Any], {"version": "3"})
         if image:
             body["image"] = image
         if cmd:
@@ -282,7 +268,7 @@ class Client(object):
 
         return self.request.put("/contract/{}".format(smart_contract_id), body)
 
-    def delete_smart_contract(self, smart_contract_id: str):
+    def delete_smart_contract(self, smart_contract_id: str) -> "request_response":
         """Delete an existing contract
 
         Args:
@@ -298,7 +284,9 @@ class Client(object):
             raise TypeError('Parameter "state" must be of type str.')
         return self.request.delete("/contract/{}".format(smart_contract_id))
 
-    def query_transactions(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
+    def query_transactions(
+        self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10
+    ) -> "request_response":
         """Perform a query on a chain's transactions
 
         Args:
@@ -313,7 +301,7 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
         return self.request.get("/transaction{}".format(query_params))
 
-    def get_transaction(self, transaction_id: str):
+    def get_transaction(self, transaction_id: str) -> "request_response":
         """Get a specific transaction by id
 
         Args:
@@ -329,7 +317,9 @@ class Client(object):
             raise TypeError('Paramter "transaction_id" must be of type str.')
         return self.request.get("/transaction/{}".format(transaction_id))
 
-    def create_transaction(self, transaction_type: str, payload: Union[str, dict], tag: Optional[str] = None, callback_url: Optional[str] = None):
+    def create_transaction(
+        self, transaction_type: str, payload: Union[str, Dict[Any, Any]], tag: Optional[str] = None, callback_url: Optional[str] = None
+    ) -> "request_response":
         """Post a transaction to a chain
 
         Args:
@@ -346,7 +336,7 @@ class Client(object):
 
         return self.request.post("/transaction", _build_transaction_dict(transaction_type, payload, tag), additional_headers=headers)
 
-    def create_bulk_transaction(self, transaction_list: list):
+    def create_bulk_transaction(self, transaction_list: List[Dict[Any, Any]]) -> "request_response":
         """Post many transactions to a chain at once, over a single connnection
 
         Args:
@@ -372,7 +362,7 @@ class Client(object):
 
         return self.request.post("/transaction_bulk", post_data)
 
-    def query_blocks(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10):
+    def query_blocks(self, lucene_query: Optional[str] = None, sort: Optional[str] = None, offset: int = 0, limit: int = 10) -> "request_response":
         """Perform a query on a chain's blocks
 
         Args:
@@ -387,7 +377,7 @@ class Client(object):
         query_params = self.request.get_lucene_query_params(lucene_query, sort, offset, limit)
         return self.request.get("/block{}".format(query_params))
 
-    def get_block(self, block_id: str):
+    def get_block(self, block_id: str) -> "request_response":
         """Get a specific block by id
 
         Args:
@@ -403,7 +393,7 @@ class Client(object):
             raise TypeError('Parameter "block_id" must be of type str.')
         return self.request.get("/block/{}".format(block_id))
 
-    def get_verifications(self, block_id: str, level: Optional[int] = None):
+    def get_verifications(self, block_id: str, level: Optional[int] = None) -> "request_response":
         """Get higher level block verifications by level 1 block id
 
         Args:
@@ -426,7 +416,7 @@ class Client(object):
             return self.request.get("/verifications/{}?level={}".format(block_id, level))
         return self.request.get("/verifications/{}".format(block_id))
 
-    def get_api_key(self, key_id: str):
+    def get_api_key(self, key_id: str) -> "request_response":
         """Get information about an HMAC API key
 
         Args:
@@ -442,7 +432,7 @@ class Client(object):
             raise TypeError('Parameter "key_id" must be of type str.')
         return self.request.get("/api-key/{}".format(key_id))
 
-    def list_api_keys(self):
+    def list_api_keys(self) -> "request_response":
         """List of HMAC API keys
 
         Returns:
@@ -450,7 +440,7 @@ class Client(object):
         """
         return self.request.get("/api-key")
 
-    def create_api_key(self):
+    def create_api_key(self) -> "request_response":
         """Generate a new HMAC API key
 
         Returns:
@@ -458,7 +448,7 @@ class Client(object):
         """
         return self.request.post("/api-key", {})
 
-    def delete_api_key(self, key_id: str):
+    def delete_api_key(self, key_id: str) -> "request_response":
         """Delete an existing HMAC API key
 
         Returns:
@@ -468,7 +458,7 @@ class Client(object):
             raise TypeError('Parameter "key_id" must be of type str.')
         return self.request.delete("/api-key/{}".format(key_id))
 
-    def get_smart_contract_object(self, key: str, smart_contract_id: str = None):
+    def get_smart_contract_object(self, key: str, smart_contract_id: Optional[str] = None) -> "request_response":
         """Retrieve data from the object storage of a smart contract
         Note: When ran in an actual smart contract, smart_contract_id will be pulled automatically from the environment if not explicitly provided
 
@@ -490,7 +480,7 @@ class Client(object):
             raise TypeError('Parameter "smart_contract_id" must be of type str.')
         return self.request.get("/get/{}/{}".format(smart_contract_id, key), parse_response=False)
 
-    def list_smart_contract_objects(self, prefix_key: Optional[str] = None, smart_contract_id: Optional[str] = None):
+    def list_smart_contract_objects(self, prefix_key: Optional[str] = None, smart_contract_id: Optional[str] = None) -> "request_response":
         """Lists all objects stored in a smart contracts heap
         Note: When ran in an actual smart contract, smart_contract_id will be pulled automatically from the environment if not explicitly provided
 
@@ -524,14 +514,12 @@ class Client(object):
         satoshis_per_byte: Optional[float] = None,
         data: Optional[str] = None,
         change_address: Optional[str] = None,
-        outputs: Optional[list] = None,
-    ):
+        outputs: Optional[List[Dict[str, Any]]] = None,
+    ) -> "request_response":
         """Create and sign a bitcoin transaction using your chain's private keys
 
         Args:
-            network (str): network to create transaction for. Only valid values are:
-                BTC_MAINNET
-                BTC_TESTNET3
+            network (str): network to create transaction for. Only valid values are ``BTC_MAINNET`` and ``BTC_TESTNET3``
             satoshis_per_byte (optional, int): fee to pay in satoshis/byte. If not supplied, it will be estimated for you.
             data (optional, str): string to embed in the transaction as null-data output type
             change_address (optional, str): address to send change to. If not supplied, it will default to the address you are sending from
@@ -559,7 +547,7 @@ class Client(object):
         if network not in valid_networks:
             raise ValueError('Parameter "network" must be one of {}.'.format(valid_networks))
 
-        body = cast(dict, {"network": network, "transaction": {}})
+        body = cast(Dict[str, Any], {"network": network, "transaction": {}})
 
         if outputs:
             body["transaction"]["outputs"] = outputs
@@ -573,7 +561,7 @@ class Client(object):
 
     def create_ethereum_transaction(
         self, network: str, to: str, value: str, data: Optional[str] = None, gas_price: Optional[str] = None, gas: Optional[str] = None
-    ):
+    ) -> "request_response":
         """Create and sign a public ethereum transaction using your chain's private keys
 
         Args:
@@ -612,18 +600,18 @@ class Client(object):
         if gas is not None and not isinstance(gas, str):
             raise TypeError('Parameter "gas" must be of type str.')
 
-        body = cast(dict, {"network": network, "transaction": {"to": to, "value": value}})
+        body = cast(Dict[str, Any], {"network": network, "transaction": {"to": to, "value": value}})
 
         if data:
             body["transaction"]["data"] = data
         if gas_price:
-            body["transaction"]["gas_price"] = gas_price
+            body["transaction"]["gasPrice"] = gas_price
         if gas:
             body["transaction"]["gas"] = gas
 
         return self.request.post("/public-blockchain-transaction", body=body)
 
-    def get_public_blockchain_addresses(self):
+    def get_public_blockchain_addresses(self) -> "request_response":
         """Get interchain addresses for this Dragonchain node (L1 and L5 only)
 
         Returns:
@@ -631,7 +619,7 @@ class Client(object):
         """
         return self.request.get("/public-blockchain-address")
 
-    def get_transaction_type(self, transaction_type: str):
+    def get_transaction_type(self, transaction_type: str) -> "request_response":
         """Gets information on a registered transaction type
 
         Args:
@@ -647,7 +635,7 @@ class Client(object):
             raise TypeError('Parameter "transaction_type" must be of type str.')
         return self.request.get("/transaction-type/{}".format(transaction_type))
 
-    def list_transaction_types(self):
+    def list_transaction_types(self) -> "request_response":
         """Lists out all registered transaction types for a chain
 
         Returns:
@@ -655,7 +643,7 @@ class Client(object):
         """
         return self.request.get("/transaction-types")
 
-    def update_transaction_type(self, transaction_type: str, custom_indexes: List["custom_index_type"]):
+    def update_transaction_type(self, transaction_type: str, custom_indexes: List["custom_index_type"]) -> "request_response":
         """Updates the custom index of a given registered transaction type
         Transaction Types can optionally link custom search indexes to your transactions for easyier querying later.
         A CustomIndex is a dictionairy with two keys: 'key' and 'path'.
@@ -683,7 +671,7 @@ class Client(object):
         params = {"version": "1", "custom_indexes": custom_indexes}
         return self.request.put("/transaction-type/{}".format(transaction_type), params)
 
-    def create_transaction_type(self, transaction_type: str, custom_indexes: Optional[List["custom_index_type"]] = None):
+    def create_transaction_type(self, transaction_type: str, custom_indexes: Optional[List["custom_index_type"]] = None) -> "request_response":
         """Creates a new custom transaction type.
 
         Transaction Types can optionally link custom search indexes to your transactions for easyier querying later.
@@ -711,12 +699,12 @@ class Client(object):
             raise TypeError('Parameter "transaction_type" must be of type str.')
         if custom_indexes and not isinstance(custom_indexes, list):
             raise TypeError('Parameter "custom_indexes" must be of type list.')
-        params = cast(dict, {"version": "1", "txn_type": transaction_type})
+        params = cast(Dict[str, Any], {"version": "1", "txn_type": transaction_type})
         if custom_indexes:
             params["custom_indexes"] = custom_indexes
         return self.request.post("/transaction-type", params)
 
-    def delete_transaction_type(self, transaction_type: str):
+    def delete_transaction_type(self, transaction_type: str) -> "request_response":
         """Deletes a transaction type registration
 
         Args:
@@ -733,7 +721,7 @@ class Client(object):
         return self.request.delete("/transaction-type/{}".format(transaction_type))
 
 
-def _build_transaction_dict(transaction_type: str, payload: Union[str, dict], tag: Optional[str] = None) -> dict:
+def _build_transaction_dict(transaction_type: str, payload: Union[str, Dict[Any, Any]], tag: Optional[str] = None) -> Dict[str, Any]:
     """Build the json (dictionary) body for a transaction given its inputs
 
     Args:
