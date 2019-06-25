@@ -35,7 +35,7 @@ class TestRequestsInitialization(unittest.TestCase):
     def test_type_checking(self):
         importlib.reload(request)
 
-    def test_initialization_throws_type_error(self):
+    def test_initialization_raises_type_error(self):
         self.assertRaises(TypeError, request.Request, "not a credentials service")
         self.assertRaises(TypeError, request.Request, self.creds, verify=[])
 
@@ -186,72 +186,95 @@ class TestRequestsMethods(unittest.TestCase):
 
     def test_make_headers(self):
         self.assertEqual(
-            self.request.make_headers("Timestamp", "Auth", ""), {"dragonchain": "TestID", "timestamp": "Timestamp", "Authorization": "Auth"}
+            self.request._make_headers("Timestamp", "Auth", ""), {"dragonchain": "TestID", "timestamp": "Timestamp", "Authorization": "Auth"}
         )
         self.assertEqual(
-            self.request.make_headers("Timestamp", "Auth", "application/json"),
+            self.request._make_headers("Timestamp", "Auth", "application/json"),
             {"dragonchain": "TestID", "timestamp": "Timestamp", "Authorization": "Auth", "Content-Type": "application/json"},
         )
 
-    def test_make_headers_throws_type_error(self):
-        self.assertRaises(TypeError, self.request.make_headers, [], "", "")
-        self.assertRaises(TypeError, self.request.make_headers, "", [], "")
-        self.assertRaises(TypeError, self.request.make_headers, "", "", [])
+    def test_make_headers_raises_type_error(self):
+        self.assertRaises(TypeError, self.request._make_headers, [], "", "")
+        self.assertRaises(TypeError, self.request._make_headers, "", [], "")
+        self.assertRaises(TypeError, self.request._make_headers, "", "", [])
 
-    def test_make_request_raises_type_error(self):
-        self.assertRaises(TypeError, self.request._make_request, "GET", [])
+    def test_generate_request_data_raises_type_error(self):
+        self.assertRaises(TypeError, self.request._generate_request_data, "GET", [])
 
-    def test_make_request_raises_value_error(self):
-        self.assertRaises(ValueError, self.request._make_request, "GET", "NoSlashPath")
+    def test_generate_request_data_raises_value_error(self):
+        self.assertRaises(ValueError, self.request._generate_request_data, "GET", "NoSlashPath")
 
+    @patch("dragonchain_sdk.request.datetime.datetime", utcnow=MagicMock(return_value=MagicMock(isoformat=MagicMock(return_value="mock_time"))))
+    def test_generate_request_data_returns_correct_params_with_content(self, mock_time):
+        self.request.credentials.get_authorization = MagicMock(return_value="dummy_auth")
+        response = self.request._generate_request_data("GET", "/path")
+        self.assertEqual(
+            response, ("https://dummy.test/path", b"", {"Authorization": "dummy_auth", "dragonchain": "TestID", "timestamp": "mock_timeZ"})
+        )
+
+    @patch("dragonchain_sdk.request.datetime.datetime", utcnow=MagicMock(return_value=MagicMock(isoformat=MagicMock(return_value="mock_time"))))
+    def test_generate_request_data_adds_additional_headers(self, mock_time):
+        self.request.credentials.get_authorization = MagicMock(return_value="dummy_auth")
+        response = self.request._generate_request_data("GET", "/path", additional_headers={"some": "test"})
+        self.assertEqual(
+            response,
+            ("https://dummy.test/path", b"", {"Authorization": "dummy_auth", "dragonchain": "TestID", "some": "test", "timestamp": "mock_timeZ"}),
+        )
+
+    @patch("dragonchain_sdk.request.datetime.datetime", utcnow=MagicMock(return_value=MagicMock(isoformat=MagicMock(return_value="mock_time"))))
+    def test_generate_request_data_returns_correct_params_without_content(self, mock_time):
+        self.request.credentials.get_authorization = MagicMock(return_value="dummy_auth")
+        response = self.request._generate_request_data("POST", "/path", {"some": "content"})
+        self.assertEqual(
+            response,
+            (
+                "https://dummy.test/path",
+                b'{"some":"content"}',
+                {"Authorization": "dummy_auth", "dragonchain": "TestID", "timestamp": "mock_timeZ", "Content-Type": "application/json"},
+            ),
+        )
+
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("https://dummy.test/transaction", None, None))
     @patch("dragonchain_sdk.request.Request.get_requests_method")
-    def test_make_request_raises_runtime_error_on_request_failure(self, mock_get_request):
+    def test_make_request_raises_connectionexception_error_on_request_failure(self, mock_get_request, mock_gen_data):
         mock_get_request.return_value = MagicMock(side_effect=Exception)
         self.assertRaises(exceptions.ConnectionException, self.request._make_request, "GET", "/transaction")
         mock_get_request.assert_called_once_with("GET")
 
-    @patch("dragonchain_sdk.request.Request.get_requests_method")
-    def test_make_request_raises_runtime_error_on_request_failure_post(self, mock_get_request):
-        mock_get_request.return_value = MagicMock(side_effect=Exception)
-        self.assertRaises(exceptions.ConnectionException, self.request._make_request, "POST", "/transaction", additional_headers={"banana": True})
-        mock_get_request.assert_called_once_with("POST")
-
-    def test_make_request_returns_ok_false_on_bad_response_status(self):
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("https://something/transaction", None, None))
+    def test_make_request_returns_ok_false_on_bad_response_status(self, mock_gen_data):
         with requests_mock.mock() as m:
-            m.get("https://dummy.test/transaction", status_code=400, text='{"error": "some error"}')
+            m.get("https://something/transaction", status_code=400, text='{"error": "some error"}')
             expected_response = {"ok": False, "status": 400, "response": {"error": "some error"}}
             self.assertEqual(self.request._make_request("GET", "/transaction"), expected_response)
 
-    def test_make_request_parse_json(self):
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("https://something/transaction", None, None))
+    def test_make_request_parse_json(self, mock_gen_data):
         with requests_mock.mock() as m:
-            m.get("https://dummy.test/transaction", status_code=200, json={"test": "object"})
+            m.get("https://something/transaction", status_code=200, json={"test": "object"})
             self.request._make_request("GET", "/transaction")
             expected_response = {"ok": True, "status": 200, "response": {"test": "object"}}
             self.assertEqual(self.request._make_request("GET", "/transaction", parse_response=True), expected_response)
 
-    def test_make_request_no_parse_json(self):
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("https://something/transaction", None, None))
+    def test_make_request_no_parse_json(self, mock_gen_data):
         with requests_mock.mock() as m:
-            m.get("https://dummy.test/transaction", status_code=200, text='{"test": "object"}')
+            m.get("https://something/transaction", status_code=200, text='{"test": "object"}')
             expected_response = {"ok": True, "status": 200, "response": '{"test": "object"}'}
             self.assertEqual(self.request._make_request("GET", "/transaction", parse_response=False), expected_response)
 
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("https://something/transaction", None, None))
     @patch("dragonchain_sdk.request.Request.get_requests_method")
-    def test_make_request_raises_runtime_error_on_parse_json_error(self, mock_get_request):
+    def test_make_request_raises_unexpectedresponseexception_error_on_parse_json_error(self, mock_get_request, mock_gen_data):
         mock_get_request.return_value.return_value.json.side_effect = RuntimeError("JSON Parse Error")
         mock_get_request.return_value.return_value.status_code = 200
         self.assertRaises(exceptions.UnexpectedResponseException, self.request._make_request, "GET", "/transaction")
 
-    @patch("dragonchain_sdk.request.datetime.datetime", utcnow=MagicMock(return_value=MagicMock(isoformat=MagicMock(return_value="mock_time"))))
+    @patch("dragonchain_sdk.request.Request._generate_request_data", return_value=("dummy_url", b"some content", {"some": "headers"}))
     @patch("dragonchain_sdk.request.Request.get_requests_method")
-    def test_make_request_adds_json_content_with_headers(self, mock_get_requests, mock_time):
+    def test_make_request_calls_requests_with_correct_params(self, mock_get_requests, mock_gen_data):
         self.request.credentials.get_authorization = MagicMock(return_value="dummy_auth")
         mock_request = MagicMock()
         mock_get_requests.return_value = mock_request
         self.request._make_request("POST", "/transaction", json_content={"some": "data"})
-        mock_request.assert_called_once_with(
-            data='{"some":"data"}',
-            headers={"dragonchain": "TestID", "timestamp": "mock_timeZ", "Authorization": "dummy_auth", "Content-Type": "application/json"},
-            timeout=30,
-            url="https://dummy.test/transaction",
-            verify=True,
-        )
+        mock_request.assert_called_once_with(data=b"some content", headers={"some": "headers"}, timeout=30, url="dummy_url", verify=True)

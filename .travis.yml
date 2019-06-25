@@ -19,6 +19,6 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 script:
-  - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./run.sh full-build; else ./run.sh full-build no-format; fi
+  - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./run.sh full-build; elif [ $TRAVIS_PYTHON_VERSION = 3.4 ]; then ./run.sh full-build no-async; else ./run.sh full-build no-format; fi
 after_script:
   - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi

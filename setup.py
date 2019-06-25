@@ -51,6 +51,7 @@ setuptools.setup(
     zip_safe=False,
     scripts=[],
     install_requires=["requests>=2.4.0", 'typing;python_version<"3.5"'],
+    extras_require={"aio": ["aiohttp>=3.5.0"]},
     license="Apache License 2.0",
     classifiers=[
         "Development Status :: 4 - Beta",

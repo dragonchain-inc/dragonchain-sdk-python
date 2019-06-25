@@ -22,6 +22,7 @@ All of the source code, as well as issue tracker can be viewed `on github <https
    getting_started
    configuration
    api
+   aio
    changelog
 
 .. toctree::

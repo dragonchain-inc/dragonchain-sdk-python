@@ -12,7 +12,13 @@
 import unittest
 import importlib
 
+import dragonchain_sdk
 from tests import unit
+
+if unit.PY36:
+    from unittest.mock import patch
+else:
+    from mock import patch
 
 
 class TestTypes(unittest.TestCase):
@@ -20,6 +26,20 @@ class TestTypes(unittest.TestCase):
     def test_importing_types_raises_runtime_error(self):
         try:
             from dragonchain_sdk import types
-        except Exception:
-            pass
+        except RuntimeError as e:
+            self.assertEqual(str(e), "types should never be imported during runtime")
+            return
         self.assertRaises(RuntimeError, importlib.reload, types)
+
+
+@unittest.skipUnless(dragonchain_sdk.ASYNC_SUPPORT, "Can't run tests without async support")
+class TestAsyncImport(unittest.TestCase):
+    @patch("sys.version_info", (3, 5, 0))
+    def test_async_throws_runtime_error_with_old_python(self):
+        importlib.reload(dragonchain_sdk)
+        self.assertRaises(RuntimeError, dragonchain_sdk.create_aio_client)
+
+    # Can't figure out how to mock an import error; If anyone can figure it out, feel free
+    # def test_async_throws_runtime_error_without_aiohttp(self):
+    #     importlib.reload(dragonchain_sdk)
+    #     self.assertRaises(RuntimeError, dragonchain_sdk.create_aio_client)

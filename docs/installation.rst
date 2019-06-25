@@ -18,6 +18,18 @@ Simply run the following in a terminal:
 
    python3 -m pip install -U dragonchain-sdk
 
+With asyncio support
+""""""""""""""""""""
+
+For async/await support (python 3.5+ only),
+be sure to install with the aio extras instead:
+
+::
+
+   python3 -m pip install -U dragonchain-sdk[aio]
+
+For more information on asyncio support, visit the `aio section <aio.html>`_
+
 From Source
 -----------
 

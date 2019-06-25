@@ -1,6 +1,19 @@
 Changelog
 =========
 
+3.1.0
+-----
+
+Features:
+  * Support for async/await with the ``create_aio_client`` function
+    (refer to the docs for more details)
+Documentation:
+  * Added docs related to asyncio support
+Packaging:
+  * Added aiohttp as a dependency when installing ``aio``
+    extras. Install ``dragonchain-sdk[aio]`` for
+    async/await support.
+
 3.0.4
 -----
 
