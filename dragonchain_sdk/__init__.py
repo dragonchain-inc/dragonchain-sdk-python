@@ -9,13 +9,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 from dragonchain_sdk import dragonchain_client
 
 __author__ = "Dragonchain, Inc."
-__version__ = "3.0.4"
+__version__ = "3.1.0"
+
+ASYNC_SUPPORT = False
 
 
 def set_stream_logger(name: str = "dragonchain_sdk", level: int = logging.DEBUG, format_string: Optional[str] = None) -> None:
@@ -66,3 +69,21 @@ def create_client(
 
 
 logging.getLogger("dragonchain_sdk").addHandler(logging.NullHandler())
+
+# Must be running python 3.5.3 or later and have aiohttp installed to support async functionality
+if sys.version_info[:3] >= (3, 5, 3):
+    try:
+        from dragonchain_sdk import async_helpers
+
+        ASYNC_SUPPORT = True
+    except ImportError:
+        # aiohttp is not installed. No async support
+        pass
+
+if ASYNC_SUPPORT:
+    create_aio_client = async_helpers.create_aio_client
+else:
+
+    def create_aio_client(*args: Any, **kwargs: Any) -> Any:
+        """This will be defined if async is supported"""
+        raise RuntimeError("Extra aio dependencies not installed, or python version is too old to support asyncio")

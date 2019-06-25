@@ -26,7 +26,11 @@ if [ $# -lt 1 ]; then
     printf "%s\\n" "$USAGE"
     exit 1
 elif [ "$1" = "unit" ]; then
-    python3 -m coverage run --branch -m unittest discover -s tests/unit -p "test_*.py"
+    if [ "$2" = "no-async" ]; then
+        find tests/unit/ -name "test_*.py" -not -name "*async*" -exec python3 -m coverage run --branch -m unittest {} +
+    else
+        find tests/unit/ -name "test_*.py" -exec python3 -m coverage run --branch -m unittest {} +
+    fi
 elif [ "$1" = "integration" ]; then
     python3 -m tests.integration.run
 elif [ "$1" = "coverage" ]; then
@@ -35,15 +39,19 @@ elif [ "$1" = "coverage" ]; then
     python3 -m coverage xml --include="$include"
 elif [ "$1" = "tests" ]; then
     printf "Running unit tests\\n"
-    sh run.sh unit
+    sh run.sh unit "$2"
     sh run.sh coverage
     if [ "$2" = "integration" ]; then
         printf "\\nRunning integration tests\\n"
         sh run.sh integration
     fi
 elif [ "$1" = "lint" ]; then
-    find . -name "*.py" -exec python3 -m flake8 {} +
-    if [ "$2" != "no-format" ]; then python3 -m black --check -l 150 -t py34 .; fi
+    if [ "$2" = "no-async" ]; then
+        find . -name "*.py" -not -name "*async*" -exec python3 -m flake8 {} +
+    else
+        find . -name "*.py" -exec python3 -m flake8 {} +
+        if [ "$2" != "no-format" ]; then python3 -m black --check -l 150 -t py34 .; fi
+    fi
 elif [ "$1" = "format" ]; then
     python3 -m black -l 150 -t py34 .
 elif [ "$1" = "bandit" ]; then

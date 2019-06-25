@@ -13,7 +13,7 @@ import datetime
 import logging
 import json
 import urllib.parse
-from typing import cast, Any, Callable, Optional, Dict, TYPE_CHECKING
+from typing import cast, Any, Callable, Optional, Dict, Tuple, TYPE_CHECKING
 
 import requests
 
@@ -24,6 +24,7 @@ from dragonchain_sdk import exceptions
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    import aiohttp  # noqa: F401 used by typing
     from dragonchain_sdk.types import request_response
 
 supported_http = cast(
@@ -68,6 +69,9 @@ class Request(object):
             raise TypeError('Parameter "verify" must be of type bool.')
 
         self.update_endpoint(endpoint)
+
+        # This is assigned if/when creating an async client
+        self.session = cast("aiohttp.ClientSession", None)
 
     def update_endpoint(self, endpoint: Optional[str] = None) -> None:
         """Update endpoint for this request object
@@ -214,7 +218,7 @@ class Request(object):
             params["sort"] = sort
         return self.generate_query_string(params)
 
-    def make_headers(self, timestamp: str, authorization: str, content_type: Optional[str] = None) -> Dict[str, str]:
+    def _make_headers(self, timestamp: str, authorization: str, content_type: Optional[str] = None) -> Dict[str, str]:
         """Create a headers dictionary to send with a request to a dragonchain
 
         Args:
@@ -239,6 +243,51 @@ class Request(object):
             header_dict["Content-Type"] = content_type
         return header_dict
 
+    def _generate_request_data(
+        self, http_verb: str, path: str, json_content: Optional[Dict[Any, Any]] = None, additional_headers: Optional[Dict[str, str]] = None
+    ) -> Tuple[str, bytes, Dict[str, str]]:
+        """Generate all of the data needed to pass into an http request to a dragonchain
+
+        Args:
+            http_verb (str): the type of http request to make (GET, POST, etc)
+            path (str): the full path to make the request (including query params if any) starting with a '/'
+            json_content (dict, optional): dictionary object to send as json (automatically sets content-type to application/json)
+            additional_headers (dict, optional): dictionary of additional headers to add to the request
+
+        Raises:
+            TypeError: with bad parameter types
+            ValueError: with bad parameter values
+
+        Returns:
+            Tuple where index 0 is the full URL, index 1 is the bytes of the request body, and index 2 is a dictionary of headers
+        """
+        if additional_headers is None:
+            additional_headers = {}
+        if not isinstance(path, str):
+            raise TypeError('Parameter "path" must be of type str.')
+        if not path.startswith("/"):
+            raise ValueError("Parameter \"path\" must start with a '/'.")
+
+        logger.debug("Creating request {} {}".format(http_verb, path))
+        if json_content:
+            content_type = "application/json"
+            content = json.dumps(json_content, separators=(",", ":")).encode("utf8")
+        else:
+            content_type = ""
+            content = b""
+        # Add the 'Z' manually to indicate UTC (not added by isoformat)
+        timestamp = datetime.datetime.utcnow().isoformat() + "Z"
+        authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)
+
+        header_dict = self._make_headers(timestamp, authorization, content_type)
+        additional_headers.update(header_dict)
+        full_url = self.endpoint + path
+
+        logger.debug("{} {}".format(http_verb, full_url))
+        logger.debug("Headers: {}".format(header_dict))
+        logger.debug("Data: {}".format(content))
+        return full_url, content, additional_headers
+
     def _make_request(
         self,
         http_verb: str,
@@ -254,14 +303,13 @@ class Request(object):
         Args:
             http_verb (str): the type of http request to make (GET, POST, etc)
             path (str): the full path to make the request (including query params if any) starting with a '/'
-            json (dict, optional): dictionary object to send as json (automatically sets content-type to application/json)
+            json_content (dict, optional): dictionary object to send as json (automatically sets content-type to application/json)
             timeout (int, optional): the timeout to wait for the dragonchain to respond (defaults to 30 seconds if not set)
             verify (bool, optional): specify if the SSL cert of the chain should be verified
             parse_response (bool, optional): if the return from the chain should be parsed as json
+            additional_headers (dict, optional): dictionary of additional headers to add to the request
 
         Raises:
-            TypeError: with bad parameter types
-            ValueError: with bad parameter values
             ConnectionException: when unable to communicate with the dragonchain
             UnexpectedResponseException: when the dragonchain responds with an unexpected payload
 
@@ -273,36 +321,14 @@ class Request(object):
                 'response': dict if parse_response, else str (actual response body from chain)
             }
         """
-        if additional_headers is None:
-            additional_headers = {}
-        if not isinstance(path, str):
-            raise TypeError('Parameter "path" must be of type str.')
-        if not path.startswith("/"):
-            raise ValueError("Parameter \"path\" must start with a '/'.")
-
-        logger.debug("Creating request {} {}".format(http_verb, path))
-        requests_method = self.get_requests_method(http_verb)
-        if json_content:
-            content_type = "application/json"
-            content = json.dumps(json_content, separators=(",", ":"))
-        else:
-            content_type = ""
-            content = ""
-        # Add the 'Z' manually to indicate UTC (not added by isoformat)
-        timestamp = datetime.datetime.utcnow().isoformat() + "Z"
-        authorization = self.credentials.get_authorization(http_verb, path, timestamp, content_type, content)
-
-        header_dict = self.make_headers(timestamp, authorization, content_type)
-        additional_headers.update(header_dict)
-        full_url = self.endpoint + path
-
-        logger.debug("Making request. Verify SSL: {}, Timeout: {}".format(verify, timeout))
-        logger.debug("{} {}".format(http_verb, full_url))
-        logger.debug("Headers: {}".format(header_dict))
-        logger.debug("Data: {}".format(content))
+        full_url, content, header_dict = self._generate_request_data(
+            http_verb=http_verb, path=path, json_content=json_content, additional_headers=additional_headers
+        )
 
         # Make request with appropriate data
         try:
+            requests_method = self.get_requests_method(http_verb)
+            logger.debug("Making request. Verify SSL: {}, Timeout: {}".format(verify, timeout))
             r = requests_method(url=full_url, data=content, headers=header_dict, timeout=timeout, verify=verify)
         except Exception as e:
             raise exceptions.ConnectionException("Error while communicating with the Dragonchain: {}".format(e))
