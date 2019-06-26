@@ -172,7 +172,7 @@ class TestTransactionTypes(unittest.TestCase):
         expected_response = {
             "status": 403,
             "ok": False,
-            "response": {"error": {"type": "ACTION_FORBIDDEN", "details": "This action is currently disabled."}},
+            "response": {"error": {"type": "ACTION_FORBIDDEN", "details": "Cannot delete smart contract transaction type"}},
         }
         self.assertEqual(expected_response, response)
 
