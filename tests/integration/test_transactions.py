@@ -99,7 +99,7 @@ class TestTransactions(unittest.TestCase):
             "response": {
                 "error": {
                     "type": "INVALID_TRANSACTION_TYPE",
-                    "details": "The transaction type you are attempting to use either does not exist or is invalid",
+                    "details": "The transaction type you are attempting to use either does not exist or is invalid.",
                 }
             },
         }
@@ -147,7 +147,7 @@ class TestTransactions(unittest.TestCase):
         )
         self.assertFalse(response.get("ok"), response)
         self.assertEqual(response.get("status"), 400, response)
-        self.assertEqual(response["response"]["error"]["type"], "MALFORMED_JSON", response)
+        self.assertEqual(response["response"]["error"]["type"], "VALIDATION_ERROR", response)
 
     def test_create_bulk_transactions_with_all_nonexistant_transaction_types(self):
         response = self.client.create_bulk_transaction(
@@ -173,7 +173,7 @@ class TestTransactions(unittest.TestCase):
         response = self.client.create_bulk_transaction([{"thisschema": "isnotcorrect"}, {}])
         self.assertFalse(response.get("ok"), response)
         self.assertEqual(response.get("status"), 400, response)
-        self.assertEqual(response["response"]["error"]["type"], "MALFORMED_JSON", response)
+        self.assertEqual(response["response"]["error"]["type"], "VALIDATION_ERROR", response)
 
     def wait_for_blocks(self):
         time.sleep(15)
