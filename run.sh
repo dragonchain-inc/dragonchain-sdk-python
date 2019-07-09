@@ -27,14 +27,14 @@ if [ $# -lt 1 ]; then
     exit 1
 elif [ "$1" = "unit" ]; then
     if [ "$2" = "no-async" ]; then
-        find tests/unit/ -name "test_*.py" -not -name "*async*" -exec python3 -m coverage run --branch -m unittest {} +
+        find tests/unit -name "test_*.py" -not -name "*async*" -exec python3 -m coverage run --branch -m unittest {} +
     else
-        find tests/unit/ -name "test_*.py" -exec python3 -m coverage run --branch -m unittest {} +
+        find tests/unit -name "test_*.py" -exec python3 -m coverage run --branch -m unittest {} +
     fi
 elif [ "$1" = "integration" ]; then
     python3 -m tests.integration.run
 elif [ "$1" = "coverage" ]; then
-    include=$(find ./dragonchain_sdk/ -path "*.py" | tr '\n' ',' | rev | cut -c 2- | rev)
+    include=$(find ./dragonchain_sdk -path "*.py" | tr '\n' ',' | rev | cut -c 2- | rev)
     python3 -m coverage report -m --include="$include"
     python3 -m coverage xml --include="$include"
 elif [ "$1" = "tests" ]; then

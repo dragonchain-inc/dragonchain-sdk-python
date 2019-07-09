@@ -440,13 +440,18 @@ class Client(object):
         """
         return self.request.get("/api-key")
 
-    def create_api_key(self) -> "request_response":
+    def create_api_key(self, nickname: Optional[str] = None) -> "request_response":
         """Generate a new HMAC API key
 
         Returns:
             A new API key ID and key
         """
-        return self.request.post("/api-key", {})
+        body = {}
+        if nickname:
+            if not isinstance(nickname, str):
+                raise TypeError('Parameter "nickname" must be of type str.')
+            body.update({"nickname": nickname})
+        return self.request.post("/api-key", body)
 
     def delete_api_key(self, key_id: str) -> "request_response":
         """Delete an existing HMAC API key
@@ -457,6 +462,18 @@ class Client(object):
         if not isinstance(key_id, str):
             raise TypeError('Parameter "key_id" must be of type str.')
         return self.request.delete("/api-key/{}".format(key_id))
+
+    def update_api_key(self, key_id: str, nickname: str) -> "request_response":
+        """Update the nickname of an existing HMAC API key
+
+        Returns:
+            success: True
+        """
+        if not isinstance(key_id, str):
+            raise TypeError('Parameter "key_id" must be of type str.')
+        if not isinstance(nickname, str):
+            raise TypeError('Parameter "nickname" must be of type str.')
+        return self.request.put("/api-key/{}".format(key_id), {"nickname": nickname})
 
     def get_smart_contract_object(self, key: str, smart_contract_id: Optional[str] = None) -> "request_response":
         """Retrieve data from the object storage of a smart contract

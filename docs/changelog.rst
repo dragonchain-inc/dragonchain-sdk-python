@@ -1,6 +1,15 @@
 Changelog
 =========
 
+3.1.1
+-----
+
+Features:
+  * Support the addition of nicknames to api keys on chain
+Bugs:
+  * Fixed a bug relating to a trailing `/` used in the find command when
+    running unit tests on mac
+
 3.1.0
 -----
 
