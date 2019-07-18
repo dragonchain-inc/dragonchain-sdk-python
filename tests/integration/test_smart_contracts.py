@@ -324,7 +324,7 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.delete_smart_contract(SMART_CONTRACT_BASIC_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        time.sleep(10)
+        time.sleep(12)
         deleted_fetch = self.client.get_smart_contract(transaction_type=SMART_CONTRACT_BASIC_NAME)
         self.assertEqual(_expected_not_found_response, deleted_fetch)
 
@@ -332,7 +332,7 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.delete_smart_contract(SMART_CONTRACT_ARGS_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        time.sleep(10)
+        time.sleep(12)
         deleted_fetch = self.client.get_smart_contract(transaction_type=SMART_CONTRACT_ARGS_NAME)
         self.assertEqual(_expected_not_found_response, deleted_fetch)
 
@@ -340,7 +340,7 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.delete_smart_contract(SMART_CONTRACT_SCHEDULER_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        time.sleep(10)
+        time.sleep(12)
         deleted_fetch = self.client.get_smart_contract(transaction_type=SMART_CONTRACT_SCHEDULER_NAME)
         self.assertEqual(_expected_not_found_response, deleted_fetch)
 
@@ -348,7 +348,7 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.delete_smart_contract(SMART_CONTRACT_CRON_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        time.sleep(10)
+        time.sleep(12)
         deleted_fetch = self.client.get_smart_contract(transaction_type=SMART_CONTRACT_CRON_NAME)
         self.assertEqual(_expected_not_found_response, deleted_fetch)
 

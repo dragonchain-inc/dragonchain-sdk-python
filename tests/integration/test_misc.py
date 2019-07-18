@@ -42,13 +42,16 @@ class TestMisc(unittest.TestCase):
 
     # CREATE BITCOIN TRANSACTION #
 
-    def test_create_bitcoin_transaction_with_insufficient_funds(self):
+    def test_create_bitcoin_transaction_with_insufficient_crypto(self):
         response = self.client.create_bitcoin_transaction(network="BTC_MAINNET")
         expected_response = {
             "status": 400,
             "ok": False,
             "response": {
-                "error": {"type": "INSUFFICIENT_FUNDS", "details": "You do not have enough UTXOs or funds in this address to sign a transaction with"}
+                "error": {
+                    "type": "INSUFFICIENT_CRYPTO",
+                    "details": "You do not have enough UTXOs or funds in this address to sign a transaction with",
+                }
             },
         }
         self.assertEqual(expected_response, response)
@@ -145,7 +148,7 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestMisc("test_get_status"))
     suite.addTest(TestMisc("test_get_blockchain_addresses"))
-    suite.addTest(TestMisc("test_create_bitcoin_transaction_with_insufficient_funds"))
+    suite.addTest(TestMisc("test_create_bitcoin_transaction_with_insufficient_crypto"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_no_value"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_data"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_gas_price"))

@@ -47,7 +47,7 @@ create_transaction_response_schema = {"type": "object", "properties": {"transact
 
 api_key_create_schema = {
     "type": "object",
-    "properties": {"key": {"type": "string"}, "id": {"type": "string"}, "registration_time": {"type": "integer"}},
+    "properties": {"key": {"type": "string"}, "id": {"type": "string"}, "registration_time": {"type": "integer"}, "nickname": {"type": "string"}},
     "required": ["key", "id", "registration_time"],
     "additionalProperties": False,
 }
@@ -59,7 +59,12 @@ api_key_list_schema = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"type": "string"}, "registration_time": {"type": "integer"}, "root": {"type": "boolean"}},
+                "properties": {
+                    "id": {"type": "string"},
+                    "registration_time": {"type": "integer"},
+                    "nickname": {"type": "string"},
+                    "root": {"type": "boolean"},
+                },
                 "required": ["id", "registration_time"],
                 "additionalProperties": False,
             },
@@ -73,17 +78,14 @@ get_status_schema = {
     "type": "object",
     "properties": {
         "version": {"type": "string"},
-        "cloud": {"type": "string"},
-        "region": {"type": "string"},
         "scheme": {"type": "string", "enum": ["trust", "work"]},
         "encryptionAlgo": {"type": "string", "enum": ["secp256k1"]},
         "hashAlgo": {"type": "string", "enum": ["blake2b"]},
         "id": {"type": "string"},
         "level": {"type": "integer", "minimum": 1, "maximum": 5},
-        "wallet": {"type": "string"},
         "url": {"type": "string"},
     },
-    "required": ["version", "cloud", "region", "scheme", "encryptionAlgo", "hashAlgo", "id", "level", "wallet", "url"],
+    "required": ["version", "scheme", "encryptionAlgo", "hashAlgo", "id", "level", "url"],
     "additionalProperties": False,
 }
 
