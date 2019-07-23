@@ -1,6 +1,12 @@
 Changelog
 =========
 
+3.1.2
+-----
+
+Features:
+  * Use new versioned api endpoints
+
 3.1.1
 -----
 

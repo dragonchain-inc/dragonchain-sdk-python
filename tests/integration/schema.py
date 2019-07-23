@@ -215,7 +215,7 @@ query_block_schema = {
     "additionalProperties": False,
 }
 
-smart_contract_schema_at_rest_schema = {
+smart_contract_at_rest_schema = {
     "type": "object",
     "properties": {
         "version": {"type": "string", "enum": ["1"]},
@@ -259,16 +259,9 @@ smart_contract_schema_at_rest_schema = {
     "additionalProperties": False,
 }
 
-smart_contract_create_schema = {
-    "type": "object",
-    "properties": {"success": smart_contract_schema_at_rest_schema},
-    "required": ["success"],
-    "additionalProperties": False,
-}
-
 query_smart_contract_schema = {
     "type": "object",
-    "properties": {"results": {"type": "array", "items": smart_contract_schema_at_rest_schema}, "total": {"type": "integer"}},
+    "properties": {"results": {"type": "array", "items": smart_contract_at_rest_schema}, "total": {"type": "integer"}},
 }
 
 l2_verifications_schema = {

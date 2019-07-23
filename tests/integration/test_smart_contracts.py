@@ -54,18 +54,18 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.create_smart_contract(transaction_type=SMART_CONTRACT_BASIC_NAME, image="alpine:latest", cmd="uptime")
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_BASIC_ID
-        SMART_CONTRACT_BASIC_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_BASIC_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_args(self):
         response = self.client.create_smart_contract(transaction_type=SMART_CONTRACT_ARGS_NAME, image="alpine:latest", cmd="echo", args=["hello"])
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_ARGS_ID
-        SMART_CONTRACT_ARGS_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_ARGS_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_custom_env(self):
@@ -78,9 +78,9 @@ class TestSmartContracts(unittest.TestCase):
         )
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_ENV_ID
-        SMART_CONTRACT_ENV_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_ENV_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_serial_execution_order(self):
@@ -89,9 +89,9 @@ class TestSmartContracts(unittest.TestCase):
         )
         self.assertTrue(response.get("ok"))
         self.assertEqual(response.get("status"), 202)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_ORDER_ID
-        SMART_CONTRACT_ORDER_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_ORDER_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_secrets(self):
@@ -100,9 +100,9 @@ class TestSmartContracts(unittest.TestCase):
         )
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_SECRETS_ID
-        SMART_CONTRACT_SECRETS_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_SECRETS_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_scheduler(self):
@@ -113,9 +113,9 @@ class TestSmartContracts(unittest.TestCase):
         CREATION_TIMESTAMP = str(time.time())
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_SCHEDULER_ID
-        SMART_CONTRACT_SCHEDULER_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_SCHEDULER_ID = response["response"]["id"]
         time.sleep(3)
 
     def test_create_contract_with_cron(self):
@@ -124,16 +124,16 @@ class TestSmartContracts(unittest.TestCase):
         )
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 202, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_create_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global SMART_CONTRACT_CRON_ID
-        SMART_CONTRACT_CRON_ID = response["response"]["success"]["id"]
+        SMART_CONTRACT_CRON_ID = response["response"]["id"]
         time.sleep(10)
 
     def test_get_contract_with_transcation_type(self):
         response = self.client.get_smart_contract(transaction_type=SMART_CONTRACT_ARGS_NAME)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 200, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_schema_at_rest_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
         global ARGS_CONTRACT_BODY
         ARGS_CONTRACT_BODY = response["response"]
 
@@ -141,7 +141,7 @@ class TestSmartContracts(unittest.TestCase):
         response = self.client.get_smart_contract(smart_contract_id=SMART_CONTRACT_ARGS_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 200, response)
-        jsonschema.validate(response.get("response"), schema.smart_contract_schema_at_rest_schema)
+        jsonschema.validate(response.get("response"), schema.smart_contract_at_rest_schema)
 
     def test_query_contracts_with_no_params(self):
         response = self.client.query_smart_contracts()
