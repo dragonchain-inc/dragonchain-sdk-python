@@ -460,3 +460,15 @@ all_verifications_schema = {
     "required": ["2", "3", "4", "5"],
     "additionalProperties": False,
 }
+
+pending_verifications_schema = {
+    "type": "object",
+    "properties": {
+        "2": {"type": "array", "items": {"type": "string"}},
+        "3": {"type": "array", "items": {"type": "string"}},
+        "4": {"type": "array", "items": {"type": "string"}},
+        "5": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["2", "3", "4", "5"],
+    "additionalProperties": False,
+}

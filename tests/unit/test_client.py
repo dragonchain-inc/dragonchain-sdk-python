@@ -470,6 +470,18 @@ class TestClientMehods(unittest.TestCase):
         self.client.get_block("1234")
         self.client.request.get.assert_called_once_with("/v1/block/1234")
 
+    def test_get_pending_verifications_throws_type_error(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.assertRaises(TypeError, self.client.get_pending_verifications, [])
+        self.assertRaises(TypeError, self.client.get_pending_verifications, {})
+        self.assertRaises(TypeError, self.client.get_pending_verifications, ())
+        self.assertRaises(TypeError, self.client.get_pending_verifications, 123)
+
+    def test_get_pending_verifications_calls_get_with_correct_path(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.get_pending_verifications("123")
+        self.client.request.get.assert_called_once_with("/v1/verifications/pending/123")
+
     def test_get_verifications_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.assertRaises(TypeError, self.client.get_verifications, [])

@@ -393,11 +393,24 @@ class Client(object):
             raise TypeError('Parameter "block_id" must be of type str.')
         return self.request.get("/v1/block/{}".format(block_id))
 
+    def get_pending_verifications(self, block_id: str) -> "request_response":
+        """Get chain ids for pending and/or scheduled verifications
+
+        Args:
+            block_id (str): ID of the block to get pending verifications for
+
+        Returns:
+            Chain ids at each level (2-5) for verifications that are scheduled or sent, but not receieved
+        """
+        if not isinstance(block_id, str):
+            raise TypeError('Parameter "block_id" must be of type str.')
+        return self.request.get("/v1/verifications/pending/{}".format(block_id))
+
     def get_verifications(self, block_id: str, level: Optional[int] = None) -> "request_response":
         """Get higher level block verifications by level 1 block id
 
         Args:
-            block_id (str): ID of the block to get
+            block_id (str): ID of the block to get verifications for
             level (int, optional): Level of verifications to get (valid values are 2, 3, 4 and 5)
 
         Raises:
