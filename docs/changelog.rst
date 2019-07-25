@@ -7,6 +7,8 @@ Changelog
 Features:
   * Use new versioned api endpoints
   * Add support for pending verifications endpoint
+Packaging:
+  * Specify explicit support for PyPy
 
 3.1.1
 -----
