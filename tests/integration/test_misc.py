@@ -10,6 +10,7 @@
 # limitations under the License.
 
 import sys
+import time
 import unittest
 
 import jsonschema
@@ -18,6 +19,7 @@ from tests.integration import schema
 import dragonchain_sdk
 
 VERIFIED_BLOCK_ID = None
+UNVERIFIED_BLOCK_ID = None
 
 
 class TestMisc(unittest.TestCase):
@@ -42,13 +44,16 @@ class TestMisc(unittest.TestCase):
 
     # CREATE BITCOIN TRANSACTION #
 
-    def test_create_bitcoin_transaction_with_insufficient_funds(self):
+    def test_create_bitcoin_transaction_with_insufficient_crypto(self):
         response = self.client.create_bitcoin_transaction(network="BTC_MAINNET")
         expected_response = {
             "status": 400,
             "ok": False,
             "response": {
-                "error": {"type": "INSUFFICIENT_FUNDS", "details": "You do not have enough UTXOs or funds in this address to sign a transaction with"}
+                "error": {
+                    "type": "INSUFFICIENT_CRYPTO",
+                    "details": "You do not have enough UTXOs or funds in this address to sign a transaction with",
+                }
             },
         }
         self.assertEqual(expected_response, response)
@@ -94,6 +99,31 @@ class TestMisc(unittest.TestCase):
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 200, response)
         jsonschema.validate(response.get("response"), schema.created_ethereum_transaction_schema)
+
+    # GET PENDING VERIFICATIONS #
+
+    # First we have to create a fresh block (which requires a transaction type)
+    def set_up_new_block_for_verification(self):
+        self.client.create_transaction_type("banana_salad")
+        transaction_id = self.client.create_transaction("banana_salad", "some data")
+        # Sleep for block to be created
+        time.sleep(8)
+        transaction = self.client.get_transaction(transaction_id["response"]["transaction_id"])
+        global UNVERIFIED_BLOCK_ID
+        UNVERIFIED_BLOCK_ID = transaction["response"]["header"]["block_id"]
+
+    def test_get_pending_verifications_schema_is_valid(self):
+        response = self.client.get_pending_verifications(UNVERIFIED_BLOCK_ID)
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+        # It's hard to check anything except simple schema validation, since we don't know how many verifications have already gone through
+        jsonschema.validate(response.get("response"), schema.pending_verifications_schema)
+
+    def pending_verifications_cleanup(self):
+        try:
+            self.client.delete_transaction_type("banana_salad")
+        except Exception:
+            pass
 
     # GET VERIFICATIONS #
 
@@ -145,12 +175,15 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestMisc("test_get_status"))
     suite.addTest(TestMisc("test_get_blockchain_addresses"))
-    suite.addTest(TestMisc("test_create_bitcoin_transaction_with_insufficient_funds"))
+    suite.addTest(TestMisc("test_create_bitcoin_transaction_with_insufficient_crypto"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_no_value"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_data"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_gas_price"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_gas_limit"))
     suite.addTest(TestMisc("test_create_ethereum_transaction_with_all_values"))
+    suite.addTest(TestMisc("set_up_new_block_for_verification"))
+    suite.addTest(TestMisc("test_get_pending_verifications_schema_is_valid"))
+    suite.addTest(TestMisc("pending_verifications_cleanup"))
     suite.addTest(TestMisc("find_verified_block"))
     suite.addTest(TestMisc("test_get_l2_verifications"))
     suite.addTest(TestMisc("test_get_l3_verifications"))

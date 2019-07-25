@@ -128,19 +128,19 @@ class TestClientMehods(unittest.TestCase):
     def test_get_status_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_status()
-        self.client.request.get.assert_called_once_with("/status")
+        self.client.request.get.assert_called_once_with("/v1/status")
 
     def test_query_smart_contracts_calls_get_without_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = ""
         self.client = dragonchain_sdk.create_client()
         self.client.query_smart_contracts()
-        self.client.request.get.assert_called_once_with("/contract")
+        self.client.request.get.assert_called_once_with("/v1/contract")
 
     def test_query_smart_contracts_calls_get_with_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = "?limit=5&offset=10"
         self.client = dragonchain_sdk.create_client()
         self.client.query_smart_contracts()
-        self.client.request.get.assert_called_once_with("/contract?limit=5&offset=10")
+        self.client.request.get.assert_called_once_with("/v1/contract?limit=5&offset=10")
 
     def test_get_smart_contract_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -152,12 +152,12 @@ class TestClientMehods(unittest.TestCase):
     def test_get_smart_contract_with_id_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_smart_contract("some_id")
-        self.client.request.get.assert_called_once_with("/contract/some_id")
+        self.client.request.get.assert_called_once_with("/v1/contract/some_id")
 
     def test_get_smart_contract_with_transaction_type_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_smart_contract(transaction_type="Name")
-        self.client.request.get.assert_called_once_with("/contract/txn_type/Name")
+        self.client.request.get.assert_called_once_with("/v1/contract/txn_type/Name")
 
     def test_create_smart_contract_raises_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -213,7 +213,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial", environment_variables={"test": "env"})
         self.client.request.post.assert_called_once_with(
-            "/contract",
+            "/v1/contract",
             {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial", "env": {"test": "env"}},
         )
 
@@ -221,14 +221,14 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial")
         self.client.request.post.assert_called_once_with(
-            "/contract", {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial"}
+            "/v1/contract", {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial"}
         )
 
     def test_post_custom_contract_calls_post_with_args(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", ["something"], "serial", environment_variables={"test": "env"})
         self.client.request.post.assert_called_once_with(
-            "/contract",
+            "/v1/contract",
             {
                 "version": "3",
                 "txn_type": "Name",
@@ -244,14 +244,15 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial", None, None, 1)
         self.client.request.post.assert_called_once_with(
-            "/contract", {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial", "seconds": 1}
+            "/v1/contract",
+            {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial", "seconds": 1},
         )
 
     def test_create_smart_contract_calls_post_with_cron(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial", None, None, None, "* * *")
         self.client.request.post.assert_called_once_with(
-            "/contract",
+            "/v1/contract",
             {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial", "cron": "* * *"},
         )
 
@@ -259,7 +260,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial", None, None, None, None, "auth")
         self.client.request.post.assert_called_once_with(
-            "/contract",
+            "/v1/contract",
             {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial", "auth": "auth"},
         )
 
@@ -267,7 +268,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial", None, {"secret": "test"})
         self.client.request.post.assert_called_once_with(
-            "/contract",
+            "/v1/contract",
             {
                 "version": "3",
                 "txn_type": "Name",
@@ -282,7 +283,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_smart_contract("Name", "ubuntu:latest", "python3.6", None, "serial")
         self.client.request.post.assert_called_once_with(
-            "/contract", {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial"}
+            "/v1/contract", {"version": "3", "txn_type": "Name", "image": "ubuntu:latest", "cmd": "python3.6", "execution_order": "serial"}
         )
 
     def test_update_smart_contract_raises_type_error(self, mock_creds, mock_request):
@@ -305,14 +306,14 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", enabled=False, execution_order="parallel", environment_variables=None)
         self.client.request.put.assert_called_once_with(
-            "/contract/some_id", {"version": "3", "execution_order": "parallel", "desired_state": "inactive"}
+            "/v1/contract/some_id", {"version": "3", "execution_order": "parallel", "desired_state": "inactive"}
         )
 
     def test_update_smart_contract_calls_enabled_false(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", enabled=True, execution_order="parallel", environment_variables=None)
         self.client.request.put.assert_called_once_with(
-            "/contract/some_id", {"version": "3", "desired_state": "active", "execution_order": "parallel"}
+            "/v1/contract/some_id", {"version": "3", "desired_state": "active", "execution_order": "parallel"}
         )
 
     def test_update_smart_contract_calls_put(self, mock_creds, mock_request):
@@ -321,43 +322,43 @@ class TestClientMehods(unittest.TestCase):
             smart_contract_id="some_id", enabled=True, execution_order="parallel", environment_variables={"test": "env"}
         )
         self.client.request.put.assert_called_once_with(
-            "/contract/some_id", {"version": "3", "execution_order": "parallel", "desired_state": "active", "env": {"test": "env"}}
+            "/v1/contract/some_id", {"version": "3", "execution_order": "parallel", "desired_state": "active", "env": {"test": "env"}}
         )
 
     def test_update_smart_contract_calls_put_with_image(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", image="sampleImage")
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "image": "sampleImage"})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "image": "sampleImage"})
 
     def test_update_smart_contract_calls_put_with_cmd(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", cmd="command")
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "cmd": "command"})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "cmd": "command"})
 
     def test_update_smart_contract_calls_put_with_args(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", args=["arg"])
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "args": ["arg"]})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "args": ["arg"]})
 
     def test_update_smart_contract_calls_put_with_secrets(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", secrets={"secret": "value"})
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "secrets": {"secret": "value"}})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "secrets": {"secret": "value"}})
 
     def test_update_smart_contract_calls_put_with_seconds(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", schedule_interval_in_seconds=1)
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "seconds": 1})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "seconds": 1})
 
     def test_update_smart_contract_calls_put_with_cron(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", cron_expression="* * *")
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "cron": "* * *"})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "cron": "* * *"})
 
     def test_update_smart_contract_calls_put_with_auth(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_smart_contract(smart_contract_id="some_id", registry_credentials="auth")
-        self.client.request.put.assert_called_once_with("/contract/some_id", {"version": "3", "auth": "auth"})
+        self.client.request.put.assert_called_once_with("/v1/contract/some_id", {"version": "3", "auth": "auth"})
 
     def test_delete_smart_contract_raises_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -366,19 +367,19 @@ class TestClientMehods(unittest.TestCase):
     def test_delete_smart_contract_calls_delete(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.delete_smart_contract(smart_contract_id="some_id")
-        self.client.request.delete.assert_called_once_with("/contract/some_id")
+        self.client.request.delete.assert_called_once_with("/v1/contract/some_id")
 
     def test_query_transactions_calls_get_without_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = ""
         self.client = dragonchain_sdk.create_client()
         self.client.query_transactions()
-        self.client.request.get.assert_called_once_with("/transaction")
+        self.client.request.get.assert_called_once_with("/v1/transaction")
 
     def test_query_transactions_calls_get_with_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = "?limit=5&offset=10"
         self.client = dragonchain_sdk.create_client()
         self.client.query_transactions()
-        self.client.request.get.assert_called_once_with("/transaction?limit=5&offset=10")
+        self.client.request.get.assert_called_once_with("/v1/transaction?limit=5&offset=10")
 
     def test_post_bulk_transaction_raises_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -394,7 +395,7 @@ class TestClientMehods(unittest.TestCase):
             ]
         )
         self.client.request.post.assert_called_once_with(
-            "/transaction_bulk",
+            "/v1/transaction_bulk",
             [
                 {"version": "1", "txn_type": "TEST_transaction", "payload": {"Test": "Payload"}, "tag": 'Test:"Tag"'},
                 {"version": "1", "txn_type": "TEST_transaction2", "payload": {"Test": "Payload"}, "tag": 'Test:"Tag"'},
@@ -413,7 +414,7 @@ class TestClientMehods(unittest.TestCase):
             transaction_type="TEST_transaction", payload={"hello": "world"}, tag='MyTag:"value" OtherTag:"other value"', callback_url="banana"
         )
         self.client.request.post.assert_called_once_with(
-            "/transaction",
+            "/v1/transaction",
             {"version": "1", "txn_type": "TEST_transaction", "payload": {"hello": "world"}, "tag": 'MyTag:"value" OtherTag:"other value"'},
             additional_headers={"X-Callback-Url": "banana"},
         )
@@ -422,14 +423,14 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction(transaction_type="TEST_transaction", payload={"hello": "world"})
         self.client.request.post.assert_called_once_with(
-            "/transaction", {"version": "1", "txn_type": "TEST_transaction", "payload": {"hello": "world"}}, additional_headers={}
+            "/v1/transaction", {"version": "1", "txn_type": "TEST_transaction", "payload": {"hello": "world"}}, additional_headers={}
         )
 
     def test_create_transaction_calls_post_with_str_payload(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction(transaction_type="TEST_transaction", payload="Hello world", tag='MyTag:"value" OtherTag:"other value"')
         self.client.request.post.assert_called_once_with(
-            "/transaction",
+            "/v1/transaction",
             {"version": "1", "txn_type": "TEST_transaction", "payload": "Hello world", "tag": 'MyTag:"value" OtherTag:"other value"'},
             additional_headers={},
         )
@@ -444,19 +445,19 @@ class TestClientMehods(unittest.TestCase):
     def test_get_transaction_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_transaction("Test")
-        self.client.request.get.assert_called_once_with("/transaction/Test")
+        self.client.request.get.assert_called_once_with("/v1/transaction/Test")
 
     def test_query_blocks_calls_get_without_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = ""
         self.client = dragonchain_sdk.create_client()
         self.client.query_blocks()
-        self.client.request.get.assert_called_once_with("/block")
+        self.client.request.get.assert_called_once_with("/v1/block")
 
     def test_query_blocks_calls_get_with_params(self, mock_creds, mock_request):
         mock_request.Request.return_value.get_lucene_query_params.return_value = "?limit=5&offset=10"
         self.client = dragonchain_sdk.create_client()
         self.client.query_blocks()
-        self.client.request.get.assert_called_once_with("/block?limit=5&offset=10")
+        self.client.request.get.assert_called_once_with("/v1/block?limit=5&offset=10")
 
     def test_get_block_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -467,7 +468,19 @@ class TestClientMehods(unittest.TestCase):
     def test_get_block_calls_get_with_string(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_block("1234")
-        self.client.request.get.assert_called_once_with("/block/1234")
+        self.client.request.get.assert_called_once_with("/v1/block/1234")
+
+    def test_get_pending_verifications_throws_type_error(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.assertRaises(TypeError, self.client.get_pending_verifications, [])
+        self.assertRaises(TypeError, self.client.get_pending_verifications, {})
+        self.assertRaises(TypeError, self.client.get_pending_verifications, ())
+        self.assertRaises(TypeError, self.client.get_pending_verifications, 123)
+
+    def test_get_pending_verifications_calls_get_with_correct_path(self, mock_creds, mock_request):
+        self.client = dragonchain_sdk.create_client()
+        self.client.get_pending_verifications("123")
+        self.client.request.get.assert_called_once_with("/v1/verifications/pending/123")
 
     def test_get_verifications_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -492,12 +505,12 @@ class TestClientMehods(unittest.TestCase):
     def test_get_verifications_calls_get_with_string(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_verifications("1234")
-        self.client.request.get.assert_called_once_with("/verifications/1234")
+        self.client.request.get.assert_called_once_with("/v1/verifications/1234")
 
     def test_get_verifications_calls_get_with_string_and_level_integer(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_verifications("1234", level=5)
-        self.client.request.get.assert_called_once_with("/verifications/1234?level=5")
+        self.client.request.get.assert_called_once_with("/v1/verifications/1234?level=5")
 
     def test_get_smart_contract_object_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -509,18 +522,18 @@ class TestClientMehods(unittest.TestCase):
     def test_get_smart_contract_object_reads_env_and_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_smart_contract_object(key="MyKey")
-        self.client.request.get.assert_called_once_with("/get/MyName/MyKey", parse_response=False)
+        self.client.request.get.assert_called_once_with("/v1/get/MyName/MyKey", parse_response=False)
 
     @patch.dict(os.environ, {"SMART_CONTRACT_ID": "MyName"})
     def test_get_smart_contract_object_reads_env_and_calls_get_with_override(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_smart_contract_object(smart_contract_id="Override", key="MyKey")
-        self.client.request.get.assert_called_once_with("/get/Override/MyKey", parse_response=False)
+        self.client.request.get.assert_called_once_with("/v1/get/Override/MyKey", parse_response=False)
 
     def test_get_smart_contract_object_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_smart_contract_object(key="MyKey", smart_contract_id="MyContract")
-        self.client.request.get.assert_called_once_with("/get/MyContract/MyKey", parse_response=False)
+        self.client.request.get.assert_called_once_with("/v1/get/MyContract/MyKey", parse_response=False)
 
     def test_list_smart_contract_objects_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -535,35 +548,35 @@ class TestClientMehods(unittest.TestCase):
     def test_list_smart_contract_objects_reads_env_and_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_smart_contract_objects(prefix_key="MyFolder")
-        self.client.request.get.assert_called_once_with("/list/MyName/MyFolder/")
+        self.client.request.get.assert_called_once_with("/v1/list/MyName/MyFolder/")
 
     @patch.dict(os.environ, {"SMART_CONTRACT_ID": "MyName"})
     def test_list_smart_contract_objects_reads_env_and_calls_get_with_override(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_smart_contract_objects(smart_contract_id="Override", prefix_key="MyFolder")
-        self.client.request.get.assert_called_once_with("/list/Override/MyFolder/")
+        self.client.request.get.assert_called_once_with("/v1/list/Override/MyFolder/")
 
     def test_list_smart_contract_objects_calls_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_smart_contract_objects(smart_contract_id="MyContract", prefix_key="MyFolder")
-        self.client.request.get.assert_called_once_with("/list/MyContract/MyFolder/")
+        self.client.request.get.assert_called_once_with("/v1/list/MyContract/MyFolder/")
 
     def test_list_smart_contract_objects_calls_get_root(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_smart_contract_objects(smart_contract_id="MyContract")
-        self.client.request.get.assert_called_once_with("/list/MyContract/")
+        self.client.request.get.assert_called_once_with("/v1/list/MyContract/")
 
     def test_create_transaction_type_calls_post(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction_type("MyNewType")
-        self.client.request.post.assert_called_once_with("/transaction-type", {"version": "1", "txn_type": "MyNewType"})
+        self.client.request.post.assert_called_once_with("/v1/transaction-type", {"version": "1", "txn_type": "MyNewType"})
 
     def test_create_transaction_type_calls_post_with_custom_indexes(self, mock_creds, mock_request):
         custom_indexes = [{"key": "name", "path": "body.name"}]
         self.client = dragonchain_sdk.create_client()
         self.client.create_transaction_type("MyNewType", custom_indexes)
         self.client.request.post.assert_called_once_with(
-            "/transaction-type", {"version": "1", "txn_type": "MyNewType", "custom_indexes": custom_indexes}
+            "/v1/transaction-type", {"version": "1", "txn_type": "MyNewType", "custom_indexes": custom_indexes}
         )
 
     def test_create_transaction_type_raises_error_type_is_not_string(self, mock_creds, mock_request):
@@ -577,7 +590,7 @@ class TestClientMehods(unittest.TestCase):
     def test_update_transaction_type_calls_put(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_transaction_type("MyCurrentType", custom_indexes=[])
-        self.client.request.put.assert_called_once_with("/transaction-type/MyCurrentType", {"version": "1", "custom_indexes": []})
+        self.client.request.put.assert_called_once_with("/v1/transaction-type/MyCurrentType", {"version": "1", "custom_indexes": []})
 
     def test_update_transaction_type_raises_error_with_invalid_transaction_type(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -590,7 +603,7 @@ class TestClientMehods(unittest.TestCase):
     def test_delete_transaction_type_calls_delete(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.delete_transaction_type("MyCurrentType")
-        self.client.request.delete.assert_called_once_with("/transaction-type/MyCurrentType")
+        self.client.request.delete.assert_called_once_with("/v1/transaction-type/MyCurrentType")
 
     def test_delete_transaction_type_raises_error_type_not_string(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -603,22 +616,22 @@ class TestClientMehods(unittest.TestCase):
     def test_get_transaction_type_succeeds(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_transaction_type("myType")
-        self.client.request.get.assert_called_once_with("/transaction-type/myType")
+        self.client.request.get.assert_called_once_with("/v1/transaction-type/myType")
 
     def test_list_transaction_types_succeeds(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_transaction_types()
-        self.client.request.get.assert_called_once_with("/transaction-types")
+        self.client.request.get.assert_called_once_with("/v1/transaction-types")
 
     def test_public_blockchain_transaction_create(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_transaction_types()
-        self.client.request.get.assert_called_once_with("/transaction-types")
+        self.client.request.get.assert_called_once_with("/v1/transaction-types")
 
     def test_public_blockchain_address_get(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_public_blockchain_addresses()
-        self.client.request.get.assert_called_once_with("/public-blockchain-address")
+        self.client.request.get.assert_called_once_with("/v1/public-blockchain-address")
 
     def test_create_bitcoin_transaction_throws_correctly(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -633,14 +646,14 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_bitcoin_transaction("BTC_MAINNET", 1.1, data="0x0", outputs=["banana"], change_address="apples")
         self.client.request.post.assert_called_once_with(
-            "/public-blockchain-transaction",
+            "/v1/public-blockchain-transaction",
             body={"network": "BTC_MAINNET", "transaction": {"fee": 1.1, "data": "0x0", "outputs": ["banana"], "change": "apples"}},
         )
 
     def test_create_bitcoin_transaction_default_only(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_bitcoin_transaction("BTC_MAINNET")
-        self.client.request.post.assert_called_once_with("/public-blockchain-transaction", body={"network": "BTC_MAINNET", "transaction": {}})
+        self.client.request.post.assert_called_once_with("/v1/public-blockchain-transaction", body={"network": "BTC_MAINNET", "transaction": {}})
 
     def test_create_ethereum_transaction_throws_correctly(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -655,7 +668,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_ethereum_transaction("ETH_ROPSTEN", "0x0000000000000000000000000000000000000000", "0x0")
         self.client.request.post.assert_called_once_with(
-            "/public-blockchain-transaction",
+            "/v1/public-blockchain-transaction",
             body={"network": "ETH_ROPSTEN", "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0"}},
         )
 
@@ -663,7 +676,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_ethereum_transaction("ETH_ROPSTEN", "0x0000000000000000000000000000000000000000", "0x0", data="Banana")
         self.client.request.post.assert_called_once_with(
-            "/public-blockchain-transaction",
+            "/v1/public-blockchain-transaction",
             body={"network": "ETH_ROPSTEN", "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana"}},
         )
 
@@ -671,7 +684,7 @@ class TestClientMehods(unittest.TestCase):
         self.client = dragonchain_sdk.create_client()
         self.client.create_ethereum_transaction("ETH_ROPSTEN", "0x0000000000000000000000000000000000000000", "0x0", data="Banana", gas_price="1")
         self.client.request.post.assert_called_once_with(
-            "/public-blockchain-transaction",
+            "/v1/public-blockchain-transaction",
             body={
                 "network": "ETH_ROPSTEN",
                 "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gasPrice": "1"},
@@ -684,7 +697,7 @@ class TestClientMehods(unittest.TestCase):
             "ETH_ROPSTEN", "0x0000000000000000000000000000000000000000", "0x0", data="Banana", gas_price="1", gas="2"
         )
         self.client.request.post.assert_called_once_with(
-            "/public-blockchain-transaction",
+            "/v1/public-blockchain-transaction",
             body={
                 "network": "ETH_ROPSTEN",
                 "transaction": {"to": "0x0000000000000000000000000000000000000000", "value": "0x0", "data": "Banana", "gasPrice": "1", "gas": "2"},
@@ -698,17 +711,17 @@ class TestClientMehods(unittest.TestCase):
     def test_create_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_api_key(nickname="nickname")
-        self.client.request.post.assert_called_once_with("/api-key", {"nickname": "nickname"})
+        self.client.request.post.assert_called_once_with("/v1/api-key", {"nickname": "nickname"})
 
     def test_creaste_api_key_succeeds_without_nickname(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.create_api_key()
-        self.client.request.post.assert_called_once_with("/api-key", {})
+        self.client.request.post.assert_called_once_with("/v1/api-key", {})
 
     def test_delete_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.delete_api_key("MyKeyID")
-        self.client.request.delete.assert_called_once_with("/api-key/MyKeyID")
+        self.client.request.delete.assert_called_once_with("/v1/api-key/MyKeyID")
 
     def test_delete_api_key_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -717,7 +730,7 @@ class TestClientMehods(unittest.TestCase):
     def test_get_api_key(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.get_api_key("MyKeyID")
-        self.client.request.get.assert_called_once_with("/api-key/MyKeyID")
+        self.client.request.get.assert_called_once_with("/v1/api-key/MyKeyID")
 
     def test_get_api_key_throws_type_error(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -726,7 +739,7 @@ class TestClientMehods(unittest.TestCase):
     def test_list_api_keys(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.list_api_keys()
-        self.client.request.get.assert_called_once_with("/api-key")
+        self.client.request.get.assert_called_once_with("/v1/api-key")
 
     def test_update_api_key_throws_with_key_id_not_str(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
@@ -739,7 +752,7 @@ class TestClientMehods(unittest.TestCase):
     def test_update_api_key_succeeds(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()
         self.client.update_api_key(key_id="id", nickname="newName")
-        self.client.request.put.assert_called_once_with("/api-key/id", {"nickname": "newName"})
+        self.client.request.put.assert_called_once_with("/v1/api-key/id", {"nickname": "newName"})
 
     def test_create_ethereum_transaction_throws_value_error_on_invalid_network(self, mock_creds, mock_request):
         self.client = dragonchain_sdk.create_client()

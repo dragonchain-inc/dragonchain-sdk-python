@@ -18,9 +18,11 @@ import jsonschema
 from tests.integration import schema
 import dragonchain_sdk
 
-CREATED_API_KEY = None
 CREATED_API_KEY_ID = None
 CREATED_API_KEY_TIME = None
+NICKNAME_CREATED_API_KEY_ID = None
+NICKNAME_CREATED_API_KEY_TIME = None
+NICKNAME = "test1"
 
 
 class TestApiKeys(unittest.TestCase):
@@ -33,21 +35,37 @@ class TestApiKeys(unittest.TestCase):
         response = self.client.create_api_key()
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 201, response)
-        global CREATED_API_KEY
         global CREATED_API_KEY_ID
         global CREATED_API_KEY_TIME
         CREATED_API_KEY_ID = response.get("response").get("id")
-        CREATED_API_KEY = response.get("response").get("key")
         CREATED_API_KEY_TIME = response.get("response").get("registration_time")
         jsonschema.validate(response.get("response"), schema.api_key_create_schema)
 
+    def test_create_api_key_with_nickname(self):
+        response = self.client.create_api_key(NICKNAME)
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 201, response)
+        global NICKNAME_CREATED_API_KEY_ID
+        global NICKNAME_CREATED_API_KEY_TIME
+        NICKNAME_CREATED_API_KEY_ID = response.get("response").get("id")
+        NICKNAME_CREATED_API_KEY_TIME = response.get("response").get("registration_time")
+        jsonschema.validate(response.get("response"), schema.api_key_create_schema)
+        self.assertEqual(response["response"].get("nickname"), NICKNAME)
+
     # GET #
 
-    def test_get_existing_api_key(self):
+    def test_get_existing_api_key_without_nickname(self):
         response = self.client.get_api_key(CREATED_API_KEY_ID)
         self.assertTrue(response.get("ok"), response)
         self.assertEqual(response.get("status"), 200, response)
-        expected_dict = {"id": CREATED_API_KEY_ID, "registration_time": CREATED_API_KEY_TIME}
+        expected_dict = {"id": CREATED_API_KEY_ID, "registration_time": CREATED_API_KEY_TIME, "nickname": ""}
+        self.assertEqual(response.get("response"), expected_dict)
+
+    def test_get_existing_api_key_with_nickname(self):
+        response = self.client.get_api_key(NICKNAME_CREATED_API_KEY_ID)
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+        expected_dict = {"id": NICKNAME_CREATED_API_KEY_ID, "registration_time": NICKNAME_CREATED_API_KEY_TIME, "nickname": NICKNAME}
         self.assertEqual(response.get("response"), expected_dict)
 
     def test_get_non_existing_api_key(self):
@@ -65,7 +83,38 @@ class TestApiKeys(unittest.TestCase):
         self.assertEqual(response.get("status"), 200, response)
         jsonschema.validate(response.get("response"), schema.api_key_list_schema)
         # Check that our earlier created api key is in the output
-        self.assertIn({"id": CREATED_API_KEY_ID, "registration_time": CREATED_API_KEY_TIME}, response["response"]["keys"], response)
+        self.assertIn({"id": CREATED_API_KEY_ID, "registration_time": CREATED_API_KEY_TIME, "nickname": ""}, response["response"]["keys"], response)
+        self.assertIn(
+            {"id": NICKNAME_CREATED_API_KEY_ID, "registration_time": NICKNAME_CREATED_API_KEY_TIME, "nickname": NICKNAME},
+            response["response"]["keys"],
+            response,
+        )
+
+    # UPDATE #
+
+    def test_update_api_key_without_nickname(self):
+        response = self.client.update_api_key(CREATED_API_KEY_ID, "test2")
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+
+        # Verify the new nickname was saved by getting it
+        response2 = self.client.get_api_key(CREATED_API_KEY_ID)
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+        expected_dict = {"id": CREATED_API_KEY_ID, "registration_time": CREATED_API_KEY_TIME, "nickname": "test2"}
+        self.assertEqual(response2.get("response"), expected_dict)
+
+    def test_update_api_key_with_nickname(self):
+        response = self.client.update_api_key(NICKNAME_CREATED_API_KEY_ID, "test3")
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+
+        # Verify the new nickname was saved by getting it
+        response2 = self.client.get_api_key(NICKNAME_CREATED_API_KEY_ID)
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+        expected_dict = {"id": NICKNAME_CREATED_API_KEY_ID, "registration_time": NICKNAME_CREATED_API_KEY_TIME, "nickname": "test3"}
+        self.assertEqual(response2.get("response"), expected_dict)
 
     # DELETE #
 
@@ -83,19 +132,34 @@ class TestApiKeys(unittest.TestCase):
 
     def test_delete_nonexisting_api_key(self):
         response = self.client.delete_api_key("BOGUSAPIKEY")
-        self.assertFalse(response.get("ok"), response)
-        self.assertEqual(response.get("status"), 404, response)
-        self.assertEqual(response.get("response"), {"error": {"type": "NOT_FOUND", "details": "The requested resource(s) cannot be found."}})
+        self.assertTrue(response.get("ok"), response)
+        self.assertEqual(response.get("status"), 200, response)
+        self.assertEqual(response.get("response"), {"success": True})
+
+    def api_key_cleanup(self):
+        try:
+            self.client.delete_api_key(CREATED_API_KEY_ID)
+        except Exception:
+            pass
+        try:
+            self.client.delete_api_key(NICKNAME_CREATED_API_KEY_ID)
+        except Exception:
+            pass
 
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestApiKeys("test_create_api_key"))
-    suite.addTest(TestApiKeys("test_get_existing_api_key"))
+    suite.addTest(TestApiKeys("test_create_api_key_with_nickname"))
+    suite.addTest(TestApiKeys("test_get_existing_api_key_without_nickname"))
+    suite.addTest(TestApiKeys("test_get_existing_api_key_with_nickname"))
     suite.addTest(TestApiKeys("test_get_non_existing_api_key"))
     suite.addTest(TestApiKeys("test_list_api_key"))
+    suite.addTest(TestApiKeys("test_update_api_key_without_nickname"))
+    suite.addTest(TestApiKeys("test_update_api_key_with_nickname"))
     suite.addTest(TestApiKeys("test_delete_existing_api_key"))
     suite.addTest(TestApiKeys("test_delete_nonexisting_api_key"))
+    suite.addTest(TestApiKeys("api_key_cleanup"))
     return suite
 
 

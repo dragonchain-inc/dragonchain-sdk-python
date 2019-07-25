@@ -16,6 +16,8 @@
 .. image:: https://img.shields.io/pypi/l/dragonchain-sdk.svg
    :target: https://github.com/dragonchain-inc/dragonchain-sdk-python/blob/master/LICENSE
    :alt: License
+.. image:: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fpython-sdk-docs.dragonchain.com%2Fbanana-shield.json
+   :alt: Banana Index
 
 Intro
 -----

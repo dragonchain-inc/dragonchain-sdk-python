@@ -63,7 +63,7 @@ class TestTransactionTypes(unittest.TestCase):
         # First we need to create a smart contract for the transaction type
         response1 = self.client.create_smart_contract(SMART_CONTRACT_NAME, "alpine:latest", "echo", ["hello"])
         global SMART_CONTRACT_ID
-        SMART_CONTRACT_ID = response1["response"]["success"]["id"]
+        SMART_CONTRACT_ID = response1["response"]["id"]
         # Now check that we can get the transaction type
         response2 = self.client.get_transaction_type(SMART_CONTRACT_NAME)
         expected_response = {

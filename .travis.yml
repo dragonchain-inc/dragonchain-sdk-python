@@ -1,13 +1,23 @@
 language: python
 matrix:
   include:
-    - python: 3.4
+    - name: PyPy 3.5
+      python: pypy3
       dist: trusty
-    - python: 3.5
+    - name: PyPy 3.6
+      python: pypy3
+      dist: xenial
+    - name: CPython 3.4
+      python: 3.4
       dist: trusty
-    - python: 3.6
+    - name: CPython 3.5
+      python: 3.5
       dist: trusty
-    - python: 3.7
+    - name: CPython 3.6
+      python: 3.6
+      dist: trusty
+    - name: CPython 3.7
+      python: 3.7
       dist: xenial
 install:
   - if [ $TRAVIS_PYTHON_VERSION = 3.7 ]; then ./run.sh install-req; else ./run.sh install-req skip-extras; fi
